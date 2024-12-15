@@ -25,7 +25,7 @@ Asset Library: Over 50 ready-to-use entities including fish, mammals, birds, inv
 
 
 # Development:
-### Software Stack
+### Software Requirement
 - [Unity LTS Release 2022.3.20f1](https://unity.com/releases/editor/qa/lts-releases)
   - Unity will also install Visual Studio which is needed for software development
 - [Blender 4.2](https://www.blender.org/download/)
@@ -38,10 +38,18 @@ Asset Library: Over 50 ready-to-use entities including fish, mammals, birds, inv
 - DirectX12 capable GPU with 4GB of video RAM (Geforce 20xx+ or Radeon RX 50xx+ or higher)
 - Integrated graphics are also supported if it's relatively modern (Intel Iris Xe or AMD Radeon)
 
-### API Access
-Because Oceanviz is designed to be a framework, the source provided acts a starting point for you to build your own ecosystem.
+### Quick Start
+1. Install Unity Hub launcher and the corresponding version of Unity outlined in the Software Stack section.
+2. Clone this repository
+3. Add the project folder `oceanviz3` to Unity Hub, then double click the project to launch the editor.
+4. Once the project is open in Unity, press the triangle 'Play' button at the top of the screen to start the visualization.
+5. Once the visualization is loaded, use the on-screen UI on the left side to add/remove species, and change environment.
 
-There are 2 primary ways to control Oceanviz to change the environment and species:
+
+### API Access
+Because Oceanviz is designed to be an open-ended framework, the source provided acts a starting point for you to build your own ecosystem.
+
+There are 2 primary ways to control Oceanviz:
 1. Via the on-screen UI
 2. Via an API by feeding the visualization a JSON data structure.
 
