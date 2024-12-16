@@ -8,7 +8,7 @@
 ![image](https://github.com/user-attachments/assets/f67086b1-0714-4f7b-8ef3-9e22074cdfec)
 
 # Features:
-Split-screen: Visualize up to 4 scenarios simutaneously by varying the water turbidity and number of species per screen region:
+Split-screen: Visualize up to 4 scenarios simultaneously by varying the water turbidity and number of species per screen region:
 ![Screenshot 2024-12-15 110259](https://github.com/user-attachments/assets/f90c5584-6a74-4b1c-b0ef-72e457518c2e)
 
 Realism: The environment is generated from a library of assets based on rules to create a rich and believable world:
@@ -47,7 +47,7 @@ Asset Library: Over 50 ready-to-use entities including fish, mammals, birds, inv
 
 
 ### API Access
-Because Oceanviz is designed to be an open-ended framework, the source provided acts a starting point for you to build your own ecosystem.
+Because Oceanviz is designed to be an open-ended framework, the source provided acts as a starting point for you to build your own ecosystem.
 
 There are 2 primary ways to control Oceanviz:
 1. Via the on-screen UI
@@ -57,4 +57,6 @@ Detailed documentation for developers can be found in the /docs directory.
 
 
 # Credits:
-Oceanviz 3 is created by Ecopath International Initiative by Paweł Łyczkowski, Pietro di Chito, Mike Pan, and Jeroen Steenbeek.
+Oceanviz3 was developed by the Ecopath International Initiative, with contributions from Paweł Łyczkowski, Pietro di Chito, Mike Pan, and Jeroen Steenbeek.
+
+
