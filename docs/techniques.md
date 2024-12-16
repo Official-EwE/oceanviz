@@ -1,5 +1,15 @@
 # Techniques
-### Splitscreen view
+## Engine Choice
+At the start of the project, we evaluated 3 viable game engines: Unreal 4, Unity 2022, and Godot 4.
+
+Technically, all 3 engines are fairly capable and more than enough to serve our needs. The differentiator came to ease of use and the amount of online documentation and community support that's available.
+
+For these reasons, Unity was chosen due to its popularity among the ‘indie’ game developers, this gave us the possibility to easily find talent to expand the Oceanviz framework in the future.
+
+Unreal 5 was not evaluated due to its lack of track record being such a new engine in 2022.
+ 
+
+## Splitscreen view
 Oceanviz supports visualizing up to 4 different scenarios at the same time by splitting the screen vertically. Instead of simulating the virtual world independently for each screen, we chose an approach where the virtual world is only simulated once, and then depending on which quadrant an entity is in, the entity can be made invisible in order to show a difference in population of a particular species. This technique of using a single world, and just making the fish appear and disappear based on their screen position, gives us visual continuity when a fish swims across multiple split screens; it is also much more performant than simulating multiple worlds in parallel. The downside is that we are more limited in terms of what can be differentiated on different screens: it’s currently impossible to show different seabed or landscape per screen region.  Currently, we can vary the population of any flora or fauna, and the turbidity of the water.
 
 ```
