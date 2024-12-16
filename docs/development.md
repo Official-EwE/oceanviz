@@ -10,7 +10,7 @@ Within a location, there can be multiple `habitats`, which are smaller regions t
 
 `Server` is the application that provides the ecosystem data to the client. In most cases it’s either Ecopath with Ecosim (EwE) or a similar program.
 
-### Overview
+### Architecture Overview
 ![](imgs/arch.png)
 
 

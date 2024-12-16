@@ -28,7 +28,7 @@ Asset Library: Over 50 ready-to-use entities including fish, mammals, birds, inv
 ### Software Requirement
 - [Unity LTS Release 2022.3.20f1](https://unity.com/releases/editor/qa/lts-releases)
   - Unity will also install Visual Studio which is needed for software development
-- [Blender 4.2](https://www.blender.org/download/)
+- [Blender 4.3](https://www.blender.org/download/)
   - This is needed if you want to make changes or additions to 3D assets library
 - Development is done on Windows 10/11, but the source code is cross-platform since Unity itself runs on Windows, MacOS, and Linux.
 
@@ -59,4 +59,5 @@ Detailed documentation for developers can be found in the /docs directory.
 # Credits:
 Oceanviz3 was developed by the Ecopath International Initiative, with contributions from Paweł Łyczkowski, Pietro di Chito, Mike Pan, and Jeroen Steenbeek.
 
+OceanViz development acknowledges funding from projects MarinePlan (Improved transdisciplinary science for effective ecosystem-based maritime spatial planning and conservation in European Seas; European Union's Horizon Europe research and innovation programme HORIZON-CL6-2021-BIODIV-01-12 under grant agreement #101059407) and NECCTON (New Copernicus Capabilities for Trophic Ocean Networks; European Union's Research & Innovation Action under grant number #101081273)
 
