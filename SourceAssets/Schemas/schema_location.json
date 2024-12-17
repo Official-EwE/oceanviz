@@ -1,0 +1,34 @@
+{
+    "location_name": "Mediterranean",
+    "location_name_long": "West Mediterranean Sea",
+    "latitude": "39.22N", // might be useful later on for mapping all viz into one space
+    "longitude": "73.11W", // or to calculate sun trajectory
+    "landscape_preset": [
+        "rocky",
+        "sandy",
+        "reef",
+        "river",
+        "pelagic"
+    ],
+    // pick one, each landscape_preset is a premade unity prefab of seabed geo, static entities like rocks and reefs, and camera preset
+    // 'pelagic' means open water, so there is no visible seabed
+    "landscape_decorations": { // additional 'crap' we can scatter onto the landscape
+        "turbine_leg": 10,
+        "pipeline": 2,
+        "plastic bottle": 100,
+        "tires": 10,
+        "pebbles": 10000,
+    },
+    "depth_meter": 20, // distance of deepest part of the landscape to the water surface, and controls light intensity
+    "turbidity_color": [
+        0.2,
+        0.5,
+        0.5
+    ], // water visibility
+    "godray_intensity": 0.5, // light shafts
+    "weather": [
+        "clear",
+        "overcast"
+    ], // skybox, good to have future expansion
+    "time": "16:39PM" // time of day, good to have for future expansion
+}

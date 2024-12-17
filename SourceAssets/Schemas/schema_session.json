@@ -1,0 +1,56 @@
+{
+    "camera-control": "manual", // or "auto"
+    "split-screen": 1, // up to 4 screens can be shown at once
+    "location": {
+        "label": "Western Mediterranean",
+        "location-id": "mediterranean"
+    },
+    "screens": [
+        {
+            "label": "No Fishing", // we might show this text on screen
+            "entities": {
+                "shark": {
+                    "population": 10,
+                    "relative_size": 1,
+                    "health": 1 // ignore health for now
+                },
+                "sea grass": {
+                    "population": 100,
+                    "relative_size": 0.5,
+                    "health": 1
+                },
+                "red coral": {
+                    "population": 100,
+                    "health": 0.5 // drives coral bleaching
+                }
+            },
+            "environment": {
+                "turbitity": 0.5,
+                "turbitity_green_factor": 0.0
+            }
+        },
+        {
+            "label": "Extensive Fishing",
+            "entities": {
+                "shark": {
+                    "population": 1,
+                    "relative_size": 1,
+                    "health": 1
+                },
+                "sea grass": {
+                    "population": 10,
+                    "relative_size": 0.5,
+                    "health": 1
+                },
+                "red coral": {
+                    "population": 10,
+                    "health": 0.0
+                }
+            },
+            "environment": {
+                "turbitity": 0.8,
+                "turbitity_green_factor": 1.0
+            }
+        }
+    ]
+}

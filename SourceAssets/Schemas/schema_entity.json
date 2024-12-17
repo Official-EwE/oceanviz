@@ -1,0 +1,46 @@
+{
+    "schema_version": 1,         // increment this if the schema dramatically changes
+    "entity_name": "Bottlenose Dolphin",
+    "entity_name_alt": "Tursiops truncatus",
+    "entity_fallback": "Dolphins porpoises",
+    "depth_min_meter": 0,           // we can get this data from fishbase
+    "depth_max_meter": 1316,        // we can get this data from fishbase
+    "mass_mean_kg": 200,    // we use this to establish predator-prey relationship. small is afraid of big
+    "size_mean_cm": 250,  // adjustable in-viz to represent decreasing maturity or size
+    "population": 5,        // the primiary adjustable parameter of the viz
+    "behavior_class":[
+        "benthic",         // sticks close to something, like clownfish to coral reef
+        "pelagic",         //most schooling pelagic fish, like tuna
+        "attached",         //things that can't move, coral, oyster, seagrass
+        "freeroaming",      //e.g. shark, whale, 
+        "custom"],          //diving seabird ??
+
+    "behavior_benthic":{
+        "avoids_habitat": ["sandy", "pelagic"],
+        "prefers_habitat": ["reefs"],
+        "mean_speed_ms": 2,
+        "turn_frequency": 5,
+        "turn_max_angle": 180,
+        "z-movement": 0.1,      
+        "max_ground_height_m": 1000   // set to 0 to make the fish stick to ground (groundfish like ray, sole, lobster, crab, etc)
+    },
+
+    "behavior_pelagic":{
+        // pawel to fill in based on what he needs
+        // ideally we want to pretend we are controling the fish parameter directly,
+        // so avoid having parameters like "leader_location_change_interval" 
+    },
+
+    "behavior_attached"{
+        "avoids_habitat": ["sandy", "pelagic"],
+        "prefers_habitat": ["reefs"],
+    },
+
+    "behavior_freeroaming":{
+        // maybe very similiar to benthic?  do we even need this behavior class definition?
+    }
+
+
+}
+
+
