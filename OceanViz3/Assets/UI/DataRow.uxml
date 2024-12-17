@@ -1,0 +1,11 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <ui:VisualElement name="DataRow" style="flex-grow: 1; flex-direction: row; max-height: 80px; justify-content: space-around; padding-top: 3px; padding-right: 3px; padding-bottom: 3px; padding-left: 3px; min-height: 80px;">
+        <ui:IntegerField label="Mackarel:" value="1000" name="IntegerField" style="flex-shrink: 1; align-self: center; flex-direction: column; flex-wrap: nowrap; align-items: stretch; justify-content: flex-start; max-width: 100px;" />
+        <ui:SliderInt high-value="100" direction="Vertical" name="PopulationPercentageSliderInt0" style="flex-direction: column;" />
+        <ui:SliderInt high-value="100" direction="Vertical" name="PopulationPercentageSliderInt1" style="flex-direction: column;" />
+        <ui:SliderInt high-value="100" direction="Vertical" name="PopulationPercentageSliderInt2" style="flex-direction: column;" />
+        <ui:SliderInt high-value="100" direction="Vertical" name="PopulationPercentageSliderInt3" style="flex-direction: column;" />
+        <ui:Button parse-escape-sequences="true" display-tooltip-when-elided="true" name="ReloadButton" style="justify-content: flex-start; align-items: auto; align-self: center; min-width: 21px; min-height: 21px; background-image: url(&quot;project://database/Assets/UI/Icons/reload.png?fileID=2800000&amp;guid=bed2429f9df09884390bc18b7a8ee0b2&amp;type=3#reload&quot;);" />
+        <ui:Button parse-escape-sequences="true" display-tooltip-when-elided="true" name="DeleteButton" style="justify-content: flex-start; align-items: auto; align-self: center; min-width: 21px; min-height: 21px; background-image: url(&quot;project://database/Assets/UI/Icons/cancel.png?fileID=2800000&amp;guid=96655e1fec172ed489b63c0e092075de&amp;type=3#cancel&quot;);" />
+    </ui:VisualElement>
+</ui:UXML>

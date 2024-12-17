@@ -1,0 +1,61 @@
+{
+    "location": {
+        "label": "Testing",
+        "locationId": "Testing"
+    },
+    "views": [
+        {
+            "label": "Screen 1",
+            "dynamic_entities": [
+                {
+                    "name": "Sea Bass",
+                    "population": 300
+                },
+                {
+                    "name": "Common Dolphin",
+                    "population": 3
+                }
+            ],
+            "static_entities": [
+                {
+                    "name": "Cystoseira",
+                    "density": 0.3
+                }
+            ],
+            "environment": {
+                "turbidity": 0.1
+            }
+        },
+        {
+            "label": "Screen 2",
+            "dynamic_entities": [
+                {
+                    "name": "Sea Bass",
+                    "population": 150
+                }
+            ],
+            "static_entities": [
+                {
+                    "name": "Cystoseira",
+                    "density": 0.8
+                }
+            ],
+            "environment": {
+                "turbidity": 0.8
+            }
+        },
+        {
+            "label": "Screen 3",
+            "dynamic_entities": [],
+            "static_entities": [
+                {
+                    "name": "Cystoseira",
+                    "density": 0.3
+                }
+            ],
+            "environment": {
+                "turbidity": 0.5
+            }
+        }
+    ]
+}

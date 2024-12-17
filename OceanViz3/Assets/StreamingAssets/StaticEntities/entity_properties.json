@@ -1,0 +1,30 @@
+[
+    {
+    "name": "Caulerpa Taxifolia",
+    "habitats": ["Shallow"]
+    },
+    {
+    "name": "Cystoseira",
+    "habitats": ["Shallow"]
+    },
+    {
+    "name": "European Flat Oyster",
+    "habitats": ["Shallow"]
+    },
+    {
+    "name": "Halimeda Algae",
+    "habitats": ["Shallow"]
+    },
+    {
+    "name": "Padina Pavonica",
+    "habitats": ["Shallow"]
+    },
+    {
+    "name": "Posidonia Oceanica",
+    "habitats": ["Shallow"]
+    },
+    {
+    "name": "Ulva Lactuca",
+    "habitats": ["Shallow"]
+    }
+]

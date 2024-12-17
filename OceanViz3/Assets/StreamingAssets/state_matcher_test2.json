@@ -1,0 +1,48 @@
+{
+    "location": {
+        "label": "Mediterranean",
+        "locationId": "Mediterranean"
+    },
+    "views": [
+        {
+            "label": "Screen 1",
+            "dynamic_entities": [
+                {
+                    "name": "Sea Bass",
+                    "population": 150
+                }
+            ],
+            "static_entities": [
+                {
+                    "name": "Cystoseira",
+                    "density": 0.9
+                },
+                {
+                    "name": "Posidonia Oceanica",
+                    "density": 0.9
+                }
+            ],
+            "environment": {
+                "turbidity": 0.1
+            }
+        },
+        {
+            "label": "Screen 2",
+            "dynamic_entities": [
+                {
+                    "name": "Monk Seal",
+                    "population": 1
+                }
+            ],
+            "static_entities": [
+                {
+                    "name": "Posidonia Oceanica",
+                    "density": 0.1
+                }
+            ],
+            "environment": {
+                "turbidity": 0.8
+            }
+        }
+    ]
+}

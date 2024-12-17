@@ -1,0 +1,1228 @@
+[
+    {
+    "name": "Atlantic Blue Marlin",
+    "population": 2,
+    "habitat": "Default",
+    "seabed_bound": false,
+    "predator": true,
+    "prey": false,
+    "cell_radius": 8.0,
+    "state_transition_speed": 0.5,
+    "state_change_timer_min": 1.0,
+    "state_change_timer_max": 10.0,
+    "separation_weight": 2.5,
+    "alignment_weight": 0.0,
+    "target_weight": 2.0,
+    "obstacle_aversion_distance": 2.0,
+    "max_vertical_angle": 30.0,
+    "move_speed": 3.0,
+    "positive_y_clip": 1.0,
+    "negative_y_clip": 0.362,
+    "animation_speed": 5.000,
+    "sine_wavelength": 1.500,
+    "sine_deformation_amplitude": {
+        "x": 0.500,
+        "y": 0.000,
+        "z": 0.000
+    },
+    "secondary_1_animation_amplitude": 0.500,
+    "invert_secondary_1_animation": -1,
+    "secondary_2_animation_amplitude": {
+        "x": 0.100,
+        "y": 0.000,
+        "z": 0.000
+    },
+    "invert_secondary_2_animation": -1,
+    "side_to_side_amplitude": {
+        "x": 0.030,
+        "y": 0.000,
+        "z": 0.000
+    },
+    "yaw_amplitude": {
+        "x": 0.000,
+        "y": 0.000,
+        "z": 0.050
+    },
+    "rolling_spine_amplitude": {
+        "x": 0.000,
+        "y": 0.050,
+        "z": 0.000
+    },
+    "bone_animated": false
+    },
+    {
+        "name": "Atlantic Bonito",
+        "population": 100,
+        "habitat": "Default",
+        "seabed_bound": false,
+        "predator": false,
+        "prey": true,
+        "cell_radius": 8,
+        "state_transition_speed": 0.5,
+        "state_change_timer_min": 1,
+        "state_change_timer_max": 10,
+        "separation_weight": 0.5,
+        "alignment_weight": 0.1,
+        "target_weight": 0.5,
+        "obstacle_aversion_distance": 2,
+        "max_vertical_angle": 30,
+        "move_speed": 1,
+        "positive_y_clip": 1,
+        "negative_y_clip": 0.55,
+        "animation_speed": 15,
+        "sine_wavelength": 2,
+        "sine_deformation_amplitude": {
+            "x": 0.02,
+            "y": 0,
+            "z": 0
+        },
+        "secondary_1_animation_amplitude": 0.5,
+        "invert_secondary_1_animation": -1,
+        "secondary_2_animation_amplitude": {
+            "x": 0.01,
+            "y": 0,
+            "z": 0
+        },
+        "invert_secondary_2_animation": -1,
+        "side_to_side_amplitude": {
+            "x": 0.003,
+            "y": 0,
+            "z": 0
+        },
+        "yaw_amplitude": {
+            "x": 0,
+            "y": 0,
+            "z": 0.02
+        },
+        "rolling_spine_amplitude": {
+            "x": 0,
+            "y": 0.02,
+            "z": 0
+        },
+        "bone_animated": false
+    },
+    {
+        "name": "Atlantic Sailfish",
+        "population": 10,
+        "habitat": "Default",
+        "seabed_bound": false,
+        "predator": true,
+        "prey": false,
+        "cell_radius": 8,
+        "state_transition_speed": 0.5,
+        "state_change_timer_min": 1,
+        "state_change_timer_max": 10,
+        "separation_weight": 2.5,
+        "alignment_weight": 0,
+        "target_weight": 2,
+        "obstacle_aversion_distance": 2,
+        "max_vertical_angle": 30,
+        "move_speed": 1.5,
+        "positive_y_clip": 1,
+        "negative_y_clip": 0.353,
+        "animation_speed": 7,
+        "sine_wavelength": 1.5,
+        "sine_deformation_amplitude": {
+            "x": 0.3,
+            "y": 0,
+            "z": 0
+        },
+        "secondary_1_animation_amplitude": 1,
+        "invert_secondary_1_animation": -1,
+        "secondary_2_animation_amplitude": {
+            "x": 0.1,
+            "y": 0,
+            "z": 0
+        },
+        "invert_secondary_2_animation": -1,
+        "side_to_side_amplitude": {
+            "x": 0.03,
+            "y": 0,
+            "z": 0
+        },
+        "yaw_amplitude": {
+            "x": 0,
+            "y": 0,
+            "z": 0.05
+        },
+        "rolling_spine_amplitude": {
+            "x": 0,
+            "y": 0.05,
+            "z": 0
+        },
+        "bone_animated": false
+    },
+    {
+        "name": "Blue Shark",
+        "population": 1,
+        "habitat": "Default",
+        "seabed_bound": false,
+        "predator": true,
+        "prey": false,
+        "cell_radius": 8,
+        "state_transition_speed": 0.5,
+        "state_change_timer_min": 1,
+        "state_change_timer_max": 10,
+        "separation_weight": 2.5,
+        "alignment_weight": 0,
+        "target_weight": 2,
+        "obstacle_aversion_distance": 2,
+        "max_vertical_angle": 30,
+        "move_speed": 1,
+        "positive_y_clip": 1,
+        "negative_y_clip": 0.55,
+        "animation_speed": 4,
+        "sine_wavelength": 0.6,
+        "sine_deformation_amplitude": {
+            "x": 0.5,
+            "y": 0,
+            "z": 0
+        },
+        "secondary_1_animation_amplitude": 1,
+        "invert_secondary_1_animation": -1,
+        "secondary_2_animation_amplitude": {
+            "x": 0.16,
+            "y": 0,
+            "z": 0
+        },
+        "invert_secondary_2_animation": -1,
+        "side_to_side_amplitude": {
+            "x": 0.015,
+            "y": 0,
+            "z": 0
+        },
+        "yaw_amplitude": {
+            "x": 0,
+            "y": 0,
+            "z": 0.05
+        },
+        "rolling_spine_amplitude": {
+            "x": 0,
+            "y": 0.05,
+            "z": 0
+        },
+        "bone_animated": false
+    },
+    {
+        "name": "Common Bottlenose Dolphin",
+        "population": 1,
+        "habitat": "Default",
+        "seabed_bound": false,
+        "predator": false,
+        "prey": false,
+        "cell_radius": 8,
+        "state_transition_speed": 0.5,
+        "state_change_timer_min": 1,
+        "state_change_timer_max": 10,
+        "separation_weight": 2.5,
+        "alignment_weight": 0,
+        "target_weight": 2,
+        "obstacle_aversion_distance": 2,
+        "max_vertical_angle": 30,
+        "move_speed": 2,
+        "positive_y_clip": 0.85,
+        "negative_y_clip": 0.4,
+        "animation_speed": 5,
+        "sine_wavelength": 1,
+        "sine_deformation_amplitude": {
+            "x": 0,
+            "y": 0,
+            "z": 0.4
+        },
+        "secondary_1_animation_amplitude": 1.2,
+        "invert_secondary_1_animation": 1,
+        "secondary_2_animation_amplitude": {
+            "x": 0,
+            "y": 0,
+            "z": 0.3
+        },
+        "invert_secondary_2_animation": -1,
+        "side_to_side_amplitude": {
+            "x": 0,
+            "y": 0,
+            "z": 0.05
+        },
+        "yaw_amplitude": {
+            "x": -0.05,
+            "y": 0,
+            "z": 0
+        },
+        "rolling_spine_amplitude": {
+            "x": 0,
+            "y": 0.05,
+            "z": 0
+        },
+        "bone_animated": false
+    },
+    {
+    "name": "Common Dentex",
+    "population": 100,
+    "habitat": "Default",
+    "seabed_bound": false,
+    "predator": false,
+    "prey": true,
+    "cell_radius": 8.0,
+    "state_transition_speed": 0.5,
+    "state_change_timer_min": 1.0,
+    "state_change_timer_max": 1.0,
+    "separation_weight": 2.5,
+    "alignment_weight": 0.0,
+    "target_weight": 2.0,
+    "obstacle_aversion_distance": 2.0,
+    "max_vertical_angle": 30.0,
+    "move_speed": 1.0,
+    "positive_y_clip": 1.0,
+    "negative_y_clip": 0.55,
+    "animation_speed": 5.000,
+    "sine_wavelength": 0.200,
+    "sine_deformation_amplitude": {
+        "x": 0.060,
+        "y": 0.000,
+        "z": 0.000
+    },
+    "secondary_1_animation_amplitude": 2.000,
+    "invert_secondary_1_animation": -1,
+    "secondary_2_animation_amplitude": {
+        "x": 0.050,
+        "y": 0.000,
+        "z": 0.000
+    },
+    "invert_secondary_2_animation": -1,
+    "side_to_side_amplitude": {
+        "x": 0.005,
+        "y": 0.000,
+        "z": 0.000
+    },
+    "yaw_amplitude": {
+        "x": 0.000,
+        "y": 0.000,
+        "z": 0.070
+    },
+    "rolling_spine_amplitude": {
+        "x": 0.000,
+        "y": 0.020,
+        "z": 0.000
+    },
+    "bone_animated": false
+    },
+    {
+    "name": "Common Dolphin",
+    "population": 1,
+    "habitat": "Default",
+    "seabed_bound": false,
+    "predator": false,
+    "prey": false,
+    "cell_radius": 8.0,
+    "state_transition_speed": 0.5,
+    "state_change_timer_min": 1.0,
+    "state_change_timer_max": 10.0,
+    "separation_weight": 2.5,
+    "alignment_weight": 0.0,
+    "target_weight": 2.0,
+    "obstacle_aversion_distance": 2.0,
+    "max_vertical_angle": 30.0,
+    "move_speed": 2.0,
+    "positive_y_clip": 0.82,
+    "negative_y_clip": 0.60,
+    "animation_speed": 5.000,
+    "sine_wavelength": 1.000,
+    "sine_deformation_amplitude": {
+        "x": 0.000,
+        "y": 0.000,
+        "z": 0.400
+    },
+    "secondary_1_animation_amplitude": 1.200,
+    "invert_secondary_1_animation": 1,
+    "secondary_2_animation_amplitude": {
+        "x": 0.000,
+        "y": 0.000,
+        "z": 0.300
+    },
+    "invert_secondary_2_animation": -1,
+    "side_to_side_amplitude": {
+        "x": 0.000,
+        "y": 0.000,
+        "z": 0.050
+    },
+    "yaw_amplitude": {
+        "x": -0.050,
+        "y": 0.000,
+        "z": 0.000
+    },
+    "rolling_spine_amplitude": {
+        "x": 0.000,
+        "y": 0.050,
+        "z": 0.000
+    },
+    "bone_animated": false
+    },
+    {
+    "name": "European Anchovy",
+    "population": 250,
+    "habitat": "Default",
+    "seabed_bound": false,
+    "predator": false,
+    "prey": true,
+    "cell_radius": 8.0,
+    "state_transition_speed": 0.5,
+    "state_change_timer_min": 1.0,
+    "state_change_timer_max": 10.0,
+    "separation_weight": 0.0,
+    "alignment_weight": 0.9,
+    "target_weight": 0.6,
+    "obstacle_aversion_distance": 1.0,
+    "max_vertical_angle": 30.0,
+    "move_speed": 0.3,
+    "positive_y_clip": 1.00,
+    "negative_y_clip": 0.55,
+    "animation_speed": 10.000,
+    "sine_wavelength": 0.100,
+    "sine_deformation_amplitude": {
+        "x": 0.010,
+        "y": 0.000,
+        "z": 0.000
+    },
+    "secondary_1_animation_amplitude": 0.800,
+    "invert_secondary_1_animation": 1,
+    "secondary_2_animation_amplitude": {
+        "x": 0.020,
+        "y": 0.000,
+        "z": 0.000
+    },
+    "invert_secondary_2_animation": -1,
+    "side_to_side_amplitude": {
+        "x": 0.001,
+        "y": 0.000,
+        "z": 0.000
+    },
+    "yaw_amplitude": {
+        "x": 0.000,
+        "y": 0.000,
+        "z": 0.030
+    },
+    "rolling_spine_amplitude": {
+        "x": 0.000,
+        "y": 0.050,
+        "z": 0.000
+    },
+    "bone_animated": false
+    },
+    {
+    "name": "European Hake",
+    "population": 250,
+    "habitat": "Default",
+    "immobile": false,
+    "seabed_bound": false,
+    "predator": false,
+    "prey": true,
+    "cell_radius": 2.0,
+    "state_transition_speed": 0.5,
+    "state_change_timer_min": 1.0,
+    "state_change_timer_max": 10.0,
+    "separation_weight": 0.5,
+    "alignment_weight": 0.5,
+    "target_weight": 0.5,
+    "obstacle_aversion_distance": 1.0,
+    "max_vertical_angle": 30.0,
+    "move_speed": 1.0,
+    "positive_y_clip": 1.00,
+    "negative_y_clip": 0.47,
+    "animation_speed": 10.000,
+    "sine_wavelength": 0.150,
+    "sine_deformation_amplitude": {
+        "x": 0.010,
+        "y": 0.000,
+        "z": 0.000
+    },
+    "secondary_1_animation_amplitude": 1.50,
+    "invert_secondary_1_animation": 1,
+    "secondary_2_animation_amplitude": {
+        "x": 0.010,
+        "y": 0.000,
+        "z": 0.000
+    },
+    "invert_secondary_2_animation": -1,
+    "side_to_side_amplitude": {
+        "x": 0.001,
+        "y": 0.000,
+        "z": 0.000
+    },
+    "yaw_amplitude": {
+        "x": 0.000,
+        "y": 0.000,
+        "z": 0.020
+    },
+    "rolling_spine_amplitude": {
+        "x": 0.000,
+        "y": 0.030,
+        "z": 0.000
+    },
+    "bone_animated": false
+    },
+    {
+    "name": "European Pilchard",
+    "population": 250,
+    "habitat": "Default",
+    "immobile": false,
+    "seabed_bound": false,
+    "predator": false,
+    "prey": true,
+    "cell_radius": 2.0,
+    "state_transition_speed": 0.5,
+    "state_change_timer_min": 1.0,
+    "state_change_timer_max": 10.0,
+    "separation_weight": 0.0,
+    "alignment_weight": 0.9,
+    "target_weight": 0.6,
+    "obstacle_aversion_distance": 1.0,
+    "max_vertical_angle": 30.0,
+    "move_speed": 0.5,
+    "positive_y_clip": 1.00,
+    "negative_y_clip": 0.2,
+    "animation_speed": 15.000,
+    "sine_wavelength": 0.080,
+    "sine_deformation_amplitude": {
+        "x": 0.006,
+        "y": 0.000,
+        "z": 0.000
+    },
+    "secondary_1_animation_amplitude": 1.20,
+    "invert_secondary_1_animation": 1,
+    "secondary_2_animation_amplitude": {
+        "x": 0.005,
+        "y": 0.000,
+        "z": 0.000
+    },
+    "invert_secondary_2_animation": -1,
+    "side_to_side_amplitude": {
+        "x": 0.001,
+        "y": 0.000,
+        "z": 0.000
+    },
+    "yaw_amplitude": {
+        "x": 0.000,
+        "y": 0.000,
+        "z": 0.020
+    },
+    "rolling_spine_amplitude": {
+        "x": 0.000,
+        "y": 0.050,
+        "z": 0.000
+    },
+    "bone_animated": false
+    },
+    {
+    "name": "Green Crab",
+    "population": 10,
+    "seabed_bound": true,
+    "predator": false,
+    "prey": false,
+    "cell_radius": 1.0,
+    "separation_weight": 1.0,
+    "alignment_weight": 0.0,
+    "target_weight": 0.01,
+    "obstacle_aversion_distance": 0.01,
+    "max_vertical_angle": 30.0,
+    "move_speed": 0.3,
+    "positive_y_clip": 1.00,
+    "negative_y_clip": 0.55,
+    "animation_speed": 8.000,
+    "sine_wavelength": 0.030,
+    "sine_deformation_amplitude": {
+        "x": 0.000,
+        "y": 0.015,
+        "z": 0.000
+    },
+    "secondary_1_animation_amplitude": 0.000,
+    "invert_secondary_1_animation": 1,
+    "secondary_2_animation_amplitude": {
+        "x": 0.000,
+        "y": 0.080,
+        "z": 0.000
+    },
+    "invert_secondary_2_animation": 1,
+    "side_to_side_amplitude": {
+        "x": 0.000,
+        "y": 0.000,
+        "z": 0.005
+    },
+    "yaw_amplitude": {
+        "x": 0.020,
+        "y": 0.000,
+        "z": 0.020
+    },
+    "rolling_spine_amplitude": {
+        "x": 0.000,
+        "y": 0.000,
+        "z": 0.040
+    },
+    "bone_animated": false
+    },
+    {
+    "name": "Grouper",
+    "population": 100,
+    "immobile": false,
+    "seabed_bound": false,
+    "predator": true,
+    "prey": false,
+    "cell_radius": 8.0,
+    "state_transition_speed": 0.5,
+    "state_change_timer_min": 1.0,
+    "state_change_timer_max": 10.0,
+    "separation_weight": 0.5,
+    "alignment_weight": 0.5,
+    "target_weight": 2.0,
+    "obstacle_aversion_distance": 2.0,
+    "max_vertical_angle": 30.0,
+    "move_speed": 0.5,
+    "positive_y_clip": 1.00,
+    "negative_y_clip": 0.55,
+    "animation_speed": 3.2,
+    "sine_wavelength": 0.18,
+    "sine_deformation_amplitude": {
+        "x": 0.15,
+        "y": 0.0,
+        "z": 0.0
+    },
+    "secondary_1_animation_amplitude": 1,
+    "invert_secondary_1_animation": 1,
+    "secondary_2_animation_amplitude": {
+        "x": 0.2,
+        "y": 0.0,
+        "z": 0.0
+    },
+    "invert_secondary_2_animation": -1,
+    "side_to_side_amplitude": {
+        "x": 0.005,
+        "y": 0.0,
+        "z": 0.0
+    },
+    "yaw_amplitude": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.03
+    },
+    "rolling_spine_amplitude": {
+        "x": 0.0,
+        "y": 0.02,
+        "z": 0.0
+    },
+    "bone_animated": false
+    },
+    {
+    "name": "Little Tunny",
+    "population": 100,
+    "habitat": "Default",
+    "seabed_bound": false,
+    "predator": false,
+    "prey": true,
+    "cell_radius": 8.0,
+    "state_transition_speed": 0.5,
+    "state_change_timer_min": 1.0,
+    "state_change_timer_max": 10.0,
+    "separation_weight": 3.5,
+    "alignment_weight": 1.0,
+    "target_weight": 1.0,
+    "obstacle_aversion_distance": 2.0,
+    "max_vertical_angle": 30.0,
+    "move_speed": 1.0,
+    "positive_y_clip": 1.00,
+    "negative_y_clip": 0.55,
+    "animation_speed": 20.000,
+    "sine_wavelength": 1.000,
+    "sine_deformation_amplitude": {
+        "x": 0.020,
+        "y": 0.000,
+        "z": 0.000
+    },
+    "secondary_1_animation_amplitude": 1.000,
+    "invert_secondary_1_animation": -1,
+    "secondary_2_animation_amplitude": {
+        "x": 0.010,
+        "y": 0.000,
+        "z": 0.000
+    },
+    "invert_secondary_2_animation": -1,
+    "side_to_side_amplitude": {
+        "x": 0.005,
+        "y": 0.000,
+        "z": 0.000
+    },
+    "yaw_amplitude": {
+        "x": 0.000,
+        "y": 0.000,
+        "z": 0.003
+    },
+    "rolling_spine_amplitude": {
+        "x": 0.000,
+        "y": 0.030,
+        "z": 0.000
+    },
+    "bone_animated": false
+    },
+    {
+    "name": "Mahi Mahi",
+    "population": 10,
+    "habitat": "Default",
+    "seabed_bound": false,
+    "predator": false,
+    "prey": true,
+    "cell_radius": 8.0,
+    "state_transition_speed": 0.5,
+    "state_change_timer_min": 1.0,
+    "state_change_timer_max": 10.0,
+    "separation_weight": 5.0,
+    "alignment_weight": 0.1,
+    "target_weight": 1.0,
+    "obstacle_aversion_distance": 2.0,
+    "max_vertical_angle": 30.0,
+    "move_speed": 1.0,
+    "positive_y_clip": 1.00,
+    "negative_y_clip": 0.55,
+    "animation_speed": 8.000,
+    "sine_wavelength": 0.300,
+    "sine_deformation_amplitude": {
+        "x": 0.100,
+        "y": 0.000,
+        "z": 0.000
+    },
+    "secondary_1_animation_amplitude": 1.000,
+    "invert_secondary_1_animation": -1,
+    "secondary_2_animation_amplitude": {
+        "x": 0.050,
+        "y": 0.000,
+        "z": 0.000
+    },
+    "invert_secondary_2_animation": -1,
+    "side_to_side_amplitude": {
+        "x": 0.010,
+        "y": 0.000,
+        "z": 0.000
+    },
+    "yaw_amplitude": {
+        "x": 0.000,
+        "y": 0.000,
+        "z": 0.060
+    },
+    "rolling_spine_amplitude": {
+        "x": 0.000,
+        "y": 0.050,
+        "z": 0.000
+    },
+    "bone_animated": false
+    },
+    {
+    "name": "Mediterranean Parrotfish",
+    "population": 10,
+    "habitat": "Seaweed",
+    "seabed_bound": false,
+    "predator": false,
+    "prey": false,
+    "cell_radius": 8.0,
+    "state_transition_speed": 0.5,
+    "state_change_timer_min": 1.0,
+    "state_change_timer_max": 10.0,
+    "separation_weight": 1.0,
+    "alignment_weight": 0.1,
+    "target_weight": 1.5,
+    "obstacle_aversion_distance": 0.2,
+    "max_vertical_angle": 30.0,
+    "move_speed": 0.5,
+    "positive_y_clip": 1.00,
+    "negative_y_clip": 0.55,
+    "animation_speed": 11.000,
+    "sine_wavelength": 0.050,
+    "sine_deformation_amplitude": {
+        "x": 0.010,
+        "y": 0.000,
+        "z": 0.000
+    },
+    "secondary_1_animation_amplitude": 0.000,
+    "invert_secondary_1_animation": 1,
+    "secondary_2_animation_amplitude": {
+        "x": 0.020,
+        "y": 0.000,
+        "z": 0.000
+    },
+    "invert_secondary_2_animation": 1,
+    "side_to_side_amplitude": {
+        "x": 0.003,
+        "y": 0.000,
+        "z": 0.000
+    },
+    "yaw_amplitude": {
+        "x": 0.000,
+        "y": 0.000,
+        "z": 0.000
+    },
+    "rolling_spine_amplitude": {
+        "x": 0.000,
+        "y": 0.000,
+        "z": 0.000
+    },
+    "bone_animated": false
+    },
+    {
+    "name": "Monk Seal",
+    "population": 1,
+    "habitat": "Default",
+    "seabed_bound": false,
+    "predator": true,
+    "prey": false,
+    "cell_radius": 8.0,
+    "state_transition_speed": 0.5,
+    "state_change_timer_min": 1.0,
+    "state_change_timer_max": 10.0,
+    "separation_weight": 2.5,
+    "alignment_weight": 0.0,
+    "target_weight": 2.0,
+    "obstacle_aversion_distance": 2.0,
+    "max_vertical_angle": 30.0,
+    "move_speed": 2.0,
+    "positive_y_clip": 1.00,
+    "negative_y_clip": 0.55,
+    "animation_speed": 5.000,
+    "sine_wavelength": 0.800,
+    "sine_deformation_amplitude": {
+        "x": 0.300,
+        "y": 0.000,
+        "z": 0.000
+    },
+    "secondary_1_animation_amplitude": 2.000,
+    "invert_secondary_1_animation": -1,
+    "secondary_2_animation_amplitude": {
+        "x": 0.160,
+        "y": 0.000,
+        "z": 0.000
+    },
+    "invert_secondary_2_animation": -1,
+    "side_to_side_amplitude": {
+        "x": 0.020,
+        "y": 0.000,
+        "z": 0.000
+    },
+    "yaw_amplitude": {
+        "x": 0.000,
+        "y": 0.000,
+        "z": 0.050
+    },
+    "rolling_spine_amplitude": {
+        "x": 0.000,
+        "y": 0.050,
+        "z": 0.000
+    },
+    "bone_animated": false
+    },
+    {
+    "name": "Ocean Sunfish",
+    "population": 1,
+    "habitat": "Default",
+    "seabed_bound": false,
+    "predator": false,
+    "prey": false,
+    "cell_radius": 8.0,
+    "state_transition_speed": 0.5,
+    "state_change_timer_min": 1.0,
+    "state_change_timer_max": 10.0,
+    "separation_weight": 2.5,
+    "alignment_weight": 1.0,
+    "target_weight": 2.0,
+    "obstacle_aversion_distance": 2.0,
+    "max_vertical_angle": 30.0,
+    "move_speed": 2.0,
+    "positive_y_clip": 1.00,
+    "negative_y_clip": 0.55,
+    "animation_speed": 2.500,
+    "sine_wavelength": 0.250,
+    "sine_deformation_amplitude": {
+        "x": 0.800,
+        "y": 0.000,
+        "z": 0.000
+    },
+    "secondary_1_animation_amplitude": 1.000,
+    "invert_secondary_1_animation": 1,
+    "secondary_2_animation_amplitude": {
+        "x": 0.000,
+        "y": 0.000,
+        "z": 0.000
+    },
+    "invert_secondary_2_animation": 1,
+    "side_to_side_amplitude": {
+        "x": 0.030,
+        "y": 0.000,
+        "z": 0.000
+    },
+    "yaw_amplitude": {
+        "x": 0.000,
+        "y": 0.000,
+        "z": 0.020
+    },
+    "rolling_spine_amplitude": {
+        "x": 0.000,
+        "y": 0.012,
+        "z": 0.000
+    },
+    "bone_animated": false
+    },
+    {
+    "name": "Red Mullet",
+    "population": 250,
+    "habitat": "Default",
+    "immobile": false,
+    "seabed_bound": false,
+    "predator": false,
+    "prey": true,
+    "cell_radius": 2.0,
+    "state_transition_speed": 0.5,
+    "state_change_timer_min": 1.0,
+    "state_change_timer_max": 10.0,
+    "separation_weight": 0.5,
+    "alignment_weight": 0.5,
+    "target_weight": 0.5,
+    "obstacle_aversion_distance": 1.0,
+    "max_vertical_angle": 30.0,
+    "move_speed": 0.2,
+    "positive_y_clip": 1.00,
+    "negative_y_clip": 0.40,
+    "animation_speed": 8.000,
+    "sine_wavelength": 0.10,
+    "sine_deformation_amplitude": {
+        "x": 0.010,
+        "y": 0.000,
+        "z": 0.000
+    },
+    "secondary_1_animation_amplitude": 0.80,
+    "invert_secondary_1_animation": 1,
+    "secondary_2_animation_amplitude": {
+        "x": 0.000,
+        "y": 0.000,
+        "z": 0.000
+    },
+    "invert_secondary_2_animation": -1,
+    "side_to_side_amplitude": {
+        "x": 0.001,
+        "y": 0.000,
+        "z": 0.000
+    },
+    "yaw_amplitude": {
+        "x": 0.000,
+        "y": 0.000,
+        "z": 0.030
+    },
+    "rolling_spine_amplitude": {
+        "x": 0.000,
+        "y": 0.050,
+        "z": 0.000
+    },
+    "bone_animated": false
+    },
+    {
+    "name": "Sea Bass",
+    "population": 100,
+    "habitat": "Default",
+    "seabed_bound": false,
+    "predator": false,
+    "prey": true,
+    "cell_radius": 8.0,
+    "state_transition_speed": 0.5,
+    "state_change_timer_min": 1.0,
+    "state_change_timer_max": 10.0,
+    "separation_weight": 1.5,
+    "alignment_weight": 0.2,
+    "target_weight": 0.6,
+    "obstacle_aversion_distance": 2.0,
+    "max_vertical_angle": 30.0,
+    "move_speed": 1.0,
+    "positive_y_clip": 1.00,
+    "negative_y_clip": 0.55,
+    "animation_speed": 7.0,
+    "sine_wavelength": 0.200,
+    "sine_deformation_amplitude": {
+        "x": 0.060,
+        "y": 0.000,
+        "z": 0.000
+    },
+    "secondary_1_animation_amplitude": 0.500,
+    "invert_secondary_1_animation": 1,
+    "secondary_2_animation_amplitude": {
+        "x": 0.050,
+        "y": 0.000,
+        "z": 0.000
+    },
+    "invert_secondary_2_animation": -1,
+    "side_to_side_amplitude": {
+        "x": 0.005,
+        "y": 0.000,
+        "z": 0.000
+    },
+    "yaw_amplitude": {
+        "x": 0.000,
+        "y": 0.000,
+        "z": 0.030
+    },
+    "rolling_spine_amplitude": {
+        "x": 0.000,
+        "y": 0.050,
+        "z": 0.000
+    },
+    "bone_animated": true
+    },
+    {
+    "name": "Shortfin Mako",
+    "population": 1,
+    "habitat": "Default",
+    "seabed_bound": false,
+    "predator": true,
+    "prey": false,
+    "cell_radius": 8.0,
+    "state_transition_speed": 0.5,
+    "state_change_timer_min": 1.0,
+    "state_change_timer_max": 10.0,
+    "separation_weight": 2.5,
+    "alignment_weight": 0.0,
+    "target_weight": 2.0,
+    "obstacle_aversion_distance": 2.0,
+    "max_vertical_angle": 30.0,
+    "move_speed": 1.0,
+    "positive_y_clip": 1.00,
+    "negative_y_clip": 0.55,
+    "animation_speed": 5.000,
+    "sine_wavelength": 0.800,
+    "sine_deformation_amplitude": {
+        "x": 0.300,
+        "y": 0.000,
+        "z": 0.000
+    },
+    "secondary_1_animation_amplitude": 2.000,
+    "invert_secondary_1_animation": -1,
+    "secondary_2_animation_amplitude": {
+        "x": 0.160,
+        "y": 0.000,
+        "z": 0.000
+    },
+    "invert_secondary_2_animation": -1,
+    "side_to_side_amplitude": {
+        "x": 0.020,
+        "y": 0.000,
+        "z": 0.000
+    },
+    "yaw_amplitude": {
+        "x": 0.000,
+        "y": 0.000,
+        "z": 0.050
+    },
+    "rolling_spine_amplitude": {
+        "x": 0.000,
+        "y": 0.050,
+        "z": 0.000
+    },
+    "bone_animated": false
+    },
+    {
+    "name": "Striped Dolphin",
+    "population": 1,
+    "habitat": "Default",
+    "immobile": false,
+    "seabed_bound": false,
+    "predator": false,
+    "prey": false,
+    "cell_radius": 8.0,
+    "state_transition_speed": 0.5,
+    "state_change_timer_min": 1.0,
+    "state_change_timer_max": 10.0,
+    "separation_weight": 2.5,
+    "alignment_weight": 0.0,
+    "target_weight": 2.0,
+    "obstacle_aversion_distance": 2.0,
+    "max_vertical_angle": 30.0,
+    "move_speed": 2.0,
+    "positive_y_clip": 1.00,
+    "negative_y_clip": 0.55,
+    "animation_speed": 5.000,
+    "sine_wavelength": 1.000,
+    "sine_deformation_amplitude": {
+        "x": 0.000,
+        "y": 0.000,
+        "z": 0.400
+    },
+    "secondary_1_animation_amplitude": 1.200,
+    "invert_secondary_1_animation": 1,
+    "secondary_2_animation_amplitude": {
+        "x": 0.000,
+        "y": 0.000,
+        "z": 0.300
+    },
+    "invert_secondary_2_animation": -1,
+    "side_to_side_amplitude": {
+        "x": 0.000,
+        "y": 0.000,
+        "z": 0.050
+    },
+    "yaw_amplitude": {
+        "x": -0.050,
+        "y": 0.000,
+        "z": 0.000
+    },
+    "rolling_spine_amplitude": {
+        "x": 0.000,
+        "y": 0.050,
+        "z": 0.000
+    },
+    "bone_animated": false
+    },
+    {
+    "name": "Swordfish",
+    "population": 1,
+    "immobile": false,
+    "seabed_bound": false,
+    "predator": true,
+    "prey": false,
+    "cell_radius": 8.0,
+    "state_transition_speed": 0.5,
+    "state_change_timer_min": 1.0,
+    "state_change_timer_max": 10.0,
+    "separation_weight": 2.5,
+    "alignment_weight": 0.0,
+    "target_weight": 2.0,
+    "obstacle_aversion_distance": 2.0,
+    "max_vertical_angle": 30.0,
+    "move_speed": 2.0,
+    "positive_y_clip": 1.00,
+    "negative_y_clip": 0.55,
+    "animation_speed": 4.0,
+    "sine_wavelength": 1.0,
+    "sine_deformation_amplitude": {
+        "x": 0.9,
+        "y": 0.0,
+        "z": 0.0
+    },
+    "secondary_1_animation_amplitude": 1,
+    "invert_secondary_1_animation": 1,
+    "secondary_2_animation_amplitude": {
+        "x": 0.1,
+        "y": 0.0,
+        "z": 0.0
+    },
+    "invert_secondary_2_animation": -1,
+    "side_to_side_amplitude": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+    },
+    "yaw_amplitude": {
+        "x": 0.0,
+        "y": 0.01,
+        "z": 0.0
+    },
+    "rolling_spine_amplitude": {
+        "x": 0.0,
+        "y": 0.04,
+        "z": 0.0
+    },
+    "bone_animated": false
+    },
+    {
+    "name": "Thresher Shark",
+    "population": 1,
+    "habitat": "Default",
+    "immobile": false,
+    "seabed_bound": false,
+    "predator": true,
+    "prey": false,
+    "cell_radius": 8.0,
+    "state_transition_speed": 0.5,
+    "state_change_timer_min": 1.0,
+    "state_change_timer_max": 10.0,
+    "separation_weight": 2.5,
+    "alignment_weight": 0.0,
+    "target_weight": 2.0,
+    "obstacle_aversion_distance": 2.0,
+    "max_vertical_angle": 30.0,
+    "move_speed": 2.0,
+    "positive_y_clip": 1.00,
+    "negative_y_clip": 0.55,
+    "animation_speed": 5.000,
+    "sine_wavelength": 0.750,
+    "sine_deformation_amplitude": {
+        "x": 0.400,
+        "y": 0.000,
+        "z": 0.000
+    },
+    "secondary_1_animation_amplitude": 0.300,
+    "invert_secondary_1_animation": -1,
+    "secondary_2_animation_amplitude": {
+        "x": 0.160,
+        "y": 0.000,
+        "z": 0.000
+    },
+    "invert_secondary_2_animation": -1,
+    "side_to_side_amplitude": {
+        "x": 0.020,
+        "y": 0.000,
+        "z": 0.000
+    },
+    "yaw_amplitude": {
+        "x": 0.000,
+        "y": 0.000,
+        "z": 0.050
+    },
+    "rolling_spine_amplitude": {
+        "x": 0.000,
+        "y": 0.050,
+        "z": 0.000
+    },
+    "bone_animated": false
+    },
+    {
+    "name": "Whale Shark",
+    "population": 1,
+    "habitat": "Default",
+    "immobile": false,
+    "seabed_bound": false,
+    "predator": true,
+    "prey": false,
+    "cell_radius": 8.0,
+    "state_transition_speed": 0.5,
+    "state_change_timer_min": 1.0,
+    "state_change_timer_max": 10.0,
+    "separation_weight": 2.5,
+    "alignment_weight": 0.0,
+    "target_weight": 2.0,
+    "obstacle_aversion_distance": 2.0,
+    "max_vertical_angle": 30.0,
+    "move_speed": 2.0,
+    "positive_y_clip": 1.00,
+    "negative_y_clip": 0.55,
+    "animation_speed": 2.000,
+    "sine_wavelength": 1.000,
+    "sine_deformation_amplitude": {
+        "x": 3.000,
+        "y": 0.000,
+        "z": 0.000
+    },
+    "secondary_1_animation_amplitude": 2.0,
+    "invert_secondary_1_animation": -1,
+    "secondary_2_animation_amplitude": {
+        "x": 0.160,
+        "y": 0.000,
+        "z": 0.000
+    },
+    "invert_secondary_2_animation": -1,
+    "side_to_side_amplitude": {
+        "x": 0.020,
+        "y": 0.000,
+        "z": 0.000
+    },
+    "yaw_amplitude": {
+        "x": 0.000,
+        "y": 0.000,
+        "z": 0.030
+    },
+    "rolling_spine_amplitude": {
+        "x": 0.000,
+        "y": 0.030,
+        "z": 0.000
+    },
+    "bone_animated": false
+    }
+]

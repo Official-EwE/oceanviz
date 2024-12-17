@@ -1,0 +1,9 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <ui:VisualElement name="TurbidityRow" style="flex-grow: 1; flex-direction: row; max-height: 80px; justify-content: space-around; padding-top: 3px; padding-right: 3px; padding-bottom: 3px; padding-left: 3px; min-height: 80px;">
+        <ui:Label tabindex="-1" text="Turbidity&#10;" parse-escape-sequences="true" display-tooltip-when-elided="true" style="max-width: 100px; flex-direction: column; -unity-text-align: middle-left;" />
+        <ui:SliderInt high-value="100" direction="Vertical" name="TurbidityPercentageSliderInt0" style="flex-direction: column;" />
+        <ui:SliderInt high-value="100" direction="Vertical" name="TurbidityPercentageSliderInt1" style="flex-direction: column;" />
+        <ui:SliderInt high-value="100" direction="Vertical" name="TurbidityPercentageSliderInt2" style="flex-direction: column;" />
+        <ui:SliderInt high-value="100" direction="Vertical" name="TurbidityPercentageSliderInt3" style="flex-direction: column;" />
+    </ui:VisualElement>
+</ui:UXML>

@@ -1,0 +1,25 @@
+.button {
+    height: 20px;
+    font-size: 10px;
+    color: rgb(255, 255, 255);
+    background-color: rgb(63, 63, 63);
+    border-left-color: rgb(41, 41, 41);
+    border-right-color: rgb(41, 41, 41);
+    border-top-color: rgb(41, 41, 41);
+    border-bottom-color: rgb(41, 41, 41);
+    scale: 1 1;
+}
+
+.button:hover {
+    background-color: rgb(82, 82, 82);
+}
+
+.button:active {
+    background-color: rgb(89, 89, 89);
+    scale: 1 1;
+    translate: 0 1px;
+}
+
+.unity-base-dropdown__checkmark {
+    display: none;
+}

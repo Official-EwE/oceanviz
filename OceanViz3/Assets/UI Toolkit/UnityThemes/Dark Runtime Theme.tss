@@ -1,0 +1,12 @@
+
+@import url("Editor Dark.uss");
+
+
+
+
+:root{
+    -unity-font-definition: resource("UIPackageResources/Fonts/Inter/Inter-Regular");
+}
+.unity-theme-env-variables {
+    --current-font: resource("UIPackageResources/Fonts/Inter/Inter-Regular");
+}

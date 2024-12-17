@@ -1,0 +1,3 @@
+.unity-base-dropdown__checkmark {
+    display: none;
+}

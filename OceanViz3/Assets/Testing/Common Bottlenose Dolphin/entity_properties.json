@@ -1,0 +1,53 @@
+﻿{
+  "name": "Common Bottlenose Dolphin",
+  "population": 1,
+  "habitat": "Default",
+  "seabed_bound": false,
+  "predator": false,
+  "prey": false,
+  "cell_radius": 8.0,
+  "state_transition_speed": 0.5,
+  "state_change_timer_min": 1.0,
+  "state_change_timer_max": 10.0,
+  "separation_weight": 2.5,
+  "alignment_weight": 0.0,
+  "target_weight": 2.0,
+  "obstacle_aversion_distance": 2.0,
+  "max_vertical_angle": 30.0,
+  "move_speed": 2.0,
+
+  "positive_y_clip":0.55,
+"negative_y_clip":0.55,
+"animation_speed": 5.000,
+  "sine_wavelength": 1.000,
+  "sine_deformation_amplitude": {
+    "x": 0.000,
+    "y": 0.000,
+    "z": 0.400
+  },
+  "secondary_1_animation_amplitude": 1.200,
+  "invert_secondary_1_animation": 1,
+  "secondary_2_animation_amplitude": {
+    "x": 0.000,
+    "y": 0.000,
+    "z": 0.300
+  },
+  "invert_secondary_2_animation": -1,
+  "side_to_side_amplitude": {
+    "x": 0.000,
+    "y": 0.000,
+    "z": 0.050
+  },
+  "yaw_amplitude": {
+    "x": -0.050,
+    "y": 0.000,
+    "z": 0.000
+  },
+  "rolling_spine_amplitude": {
+    "x": 0.000,
+    "y": 0.050,
+    "z": 0.000
+  }
+}
+
+
