@@ -40,10 +40,12 @@ Asset Library: Over 50 ready-to-use entities including fish, mammals, birds, inv
 
 ### Quick Start
 1. Install Unity Hub launcher and the corresponding version of Unity outlined in the Software Stack section.
-2. Clone this repository
-3. Add the project folder `oceanviz3` to Unity Hub, then double click the project to launch the editor.
-4. Once the project is open in Unity, press the triangle 'Play' button at the top of the screen to start the visualization.
-5. Once the visualization is loaded, use the on-screen UI on the left side to add/remove species, and change environment.
+2. Clone or download this repository
+3. Add the project folder `Oceanviz3` from this repository to Unity Hub, then double click the project to launch the editor.
+4. Initial loading of the project will take 3-5 minutes since Unity has to build a lot of cache files.
+5. Once the Unity editor is open, Open the `/Oceanviz3/Assets/Scens/main` scene. This is the basis for our underwater environment.
+6. Press the triangle 'Play' button at the top of the screen to start the visualization.
+7. Once the visualization is loaded, use the on-screen UI on the left side to add/remove species, and change environment.
 
 
 ### API Access
