@@ -70,6 +70,9 @@ namespace OceanViz3
                 AddComponent(entity, new MeshZMaxOverride { Value = 0f });
                 AddComponent(entity, new PositiveYClipOverride { Value = 0f });
                 AddComponent(entity, new NegativeYClipOverride { Value = 0f });
+
+                // Add CullingComponent
+                AddComponent(entity, new CullingComponent { MaxDistance = 70.0f }); // 70
             }
         }
     }
@@ -142,6 +145,11 @@ namespace OceanViz3
         public float MaxVerticalAngle;
 
         /// <summary>
+        /// Maximum rate at which boids can turn, with 1.0 being the default turn rate
+        /// </summary>
+        public float MaxTurnRate;
+
+        /// <summary>
         /// If true, boid will maintain minimum distance from seabed
         /// </summary>
         public bool SeabedBound;
@@ -175,6 +183,27 @@ namespace OceanViz3
         /// If true, this boid uses bone-based animation instead of shader-based animation
         /// </summary>
         public bool BoneAnimated;
+
+        /// <summary>
+        /// Number of LOD levels available for this boid type
+        /// </summary>
+        public int NumberOfLODs;
+
+        /// <summary>
+        /// Minimum speed modifier for boid movement.
+        /// </summary>
+        public float SpeedModifierMin;
+
+        /// <summary>
+        /// Maximum speed modifier for boid movement.
+        /// </summary>
+        public float SpeedModifierMax;
+
+        // Base mesh size info (from source mesh, no per-instance scaling)
+        public float3 MeshSize;
+        public float MeshLargestDimension;
+
+        
     }
     
     /// <summary>
@@ -207,6 +236,11 @@ namespace OceanViz3
         /// Previous frame's heading vector, used for calculating the next TargetVector
         /// </summary>
         public float3 PreviousHeading;
+
+            /// <summary>
+            /// Smoothed reference heading used only for stable bend calculation.
+            /// </summary>
+            public float3 BendRefHeading;
     }    
     
     /// <summary>
@@ -222,6 +256,14 @@ namespace OceanViz3
     /// </summary>
     [Serializable]
     public struct BoidPrey : IComponentData
+    {
+    }
+
+    /// <summary>
+    /// Tag component indicating a prey boid is currently escaping from a predator
+    /// </summary>
+    [Serializable]
+    public struct EscapingPredator : IComponentData, IEnableableComponent
     {
     }
 

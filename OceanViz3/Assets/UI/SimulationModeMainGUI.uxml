@@ -1,0 +1,45 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <ui:Template name="TurbidityRow" src="project://database/Assets/UI/TurbidityRow.uxml?fileID=9197481963319205126&amp;guid=7c857c9b9c0f50f4dab97a5bc23dfddf&amp;type=3#TurbidityRow" />
+    <ui:VisualElement name="MainGUI" style="flex-grow: 1; flex-direction: row;">
+        <ui:VisualElement name="DataFeeder" style="flex-grow: 1; background-color: rgb(48, 48, 48); max-width: 252px;">
+            <ui:VisualElement name="SplitViewRow" style="flex-grow: 1; height: auto; flex-direction: row; max-height: 21px; align-items: stretch; justify-content: center; align-self: auto;">
+                <ui:Label tabindex="-1" text="Split View:" parse-escape-sequences="true" display-tooltip-when-elided="true" style="height: auto; justify-content: flex-start; align-items: auto; -unity-text-align: middle-left;" />
+                <ui:Button text="1" parse-escape-sequences="true" display-tooltip-when-elided="true" focusable="false" name="SetViews1" />
+                <ui:Button text="2" parse-escape-sequences="true" display-tooltip-when-elided="true" name="SetViews2" />
+                <ui:Button text="3" parse-escape-sequences="true" display-tooltip-when-elided="true" name="SetViews3" />
+                <ui:Button text="4" parse-escape-sequences="true" display-tooltip-when-elided="true" name="SetViews4" />
+            </ui:VisualElement>
+            <ui:Label tabindex="-1" text="Dynamic" parse-escape-sequences="true" display-tooltip-when-elided="true" name="DynamicLabel" style="align-items: auto; align-self: auto; -unity-text-align: upper-center; -unity-font-style: bold; background-color: rgba(0, 0, 0, 0.29); display: none;" />
+            <ui:VisualElement name="DataRows" style="flex-grow: 0; flex-shrink: 1;" />
+            <ui:VisualElement name="AddDynamicRow" style="flex-grow: 1; flex-direction: row; max-height: 26px; justify-content: space-around; padding-top: 3px; padding-right: 3px; padding-bottom: 3px; padding-left: 3px;">
+                <ui:DropdownField index="-1" name="AddDynamicRowDropdownField" style="width: 152px;" />
+                <ui:Button text="Add" parse-escape-sequences="true" display-tooltip-when-elided="true" name="AddDynamicRowButton" />
+            </ui:VisualElement>
+            <ui:Label tabindex="-1" text="Static" parse-escape-sequences="true" display-tooltip-when-elided="true" name="StaticLabel" style="align-items: auto; align-self: auto; -unity-text-align: upper-center; -unity-font-style: bold; background-color: rgba(0, 0, 0, 0.29); display: none;" />
+            <ui:VisualElement name="StaticDataRows" style="flex-grow: 0;" />
+            <ui:VisualElement name="AddStaticRow" style="flex-grow: 1; flex-direction: row; max-height: 26px; justify-content: space-around; padding-top: 3px; padding-right: 3px; padding-bottom: 3px; padding-left: 3px;">
+                <ui:DropdownField index="-1" name="AddStaticRowDropdownField" style="width: 152px;" />
+                <ui:Button text="Add" parse-escape-sequences="true" display-tooltip-when-elided="true" name="AddStaticRowButton" />
+            </ui:VisualElement>
+            <ui:Label tabindex="-1" text="Environment" parse-escape-sequences="true" display-tooltip-when-elided="true" name="EnvironmentLabel" style="align-items: auto; align-self: auto; -unity-text-align: upper-center; -unity-font-style: bold; background-color: rgba(0, 0, 0, 0.29);" />
+            <ui:DropdownField label="Location" index="-1" name="LocationsDropdownField" style="justify-content: flex-start;" />
+            <ui:Instance template="TurbidityRow" name="TurbidityRow" />
+            <ui:Slider label="Turbidity Color" high-value="1" low-value="-1" name="TurbidityColor" style="display: none;" />
+            <ui:VisualElement style="flex-grow: 1; justify-content: flex-end; flex-direction: column; align-items: stretch; align-self: stretch;">
+                <ui:VisualElement style="flex-grow: 1; justify-content: space-around; align-items: flex-end; flex-direction: row; align-self: stretch;">
+                    <ui:Button text="Save Scene" parse-escape-sequences="true" display-tooltip-when-elided="true" name="SaveScene" />
+                    <ui:Button text="Load Scene" parse-escape-sequences="true" display-tooltip-when-elided="true" name="LoadScene" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:VisualElement style="flex-grow: 1; flex-direction: column; opacity: 1; align-items: auto; justify-content: space-between; align-self: stretch;">
+            <ui:VisualElement style="flex-grow: 1; flex-direction: column; align-items: flex-start; justify-content: space-between; align-self: stretch;">
+                <ui:Button text="Menu" parse-escape-sequences="true" display-tooltip-when-elided="true" name="MainMenuButton" style="align-self: auto; justify-content: flex-start; -unity-text-align: upper-center; align-items: auto;" />
+            </ui:VisualElement>
+            <ui:VisualElement style="flex-grow: 1; justify-content: flex-end; flex-direction: row; align-items: stretch; align-self: stretch;">
+                <ui:Button text="Activate Automatic Camera" parse-escape-sequences="true" display-tooltip-when-elided="true" name="ActivateAutomaticCameraModeButton" style="align-self: flex-end; justify-content: flex-start; -unity-text-align: middle-center;" />
+                <ui:Button text="Activate Swim Mode" parse-escape-sequences="true" display-tooltip-when-elided="true" name="ActivateSwimModeButton" style="align-self: flex-end; justify-content: flex-start; -unity-text-align: middle-center;" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

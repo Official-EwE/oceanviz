@@ -10,6 +10,8 @@ namespace OceanViz3
         public GameObject BoidSchoolPrefab;
         public GameObject BoidTargetPrefab;
         public GameObject BoidPrefab;
+        public GameObject StaticEntityPrefab;
+        public GameObject StaticEntitiesGroupPrefab;
 
         class Baker : Baker<EntityLibraryAuthoring>
         {
@@ -20,7 +22,11 @@ namespace OceanViz3
                 {
                     BoidSchoolEntity = GetEntity(authoring.BoidSchoolPrefab, TransformUsageFlags.None),
                     BoidEntity = GetEntity(authoring.BoidPrefab, TransformUsageFlags.Dynamic),
-                    BoidTargetEntity = GetEntity(authoring.BoidTargetPrefab, TransformUsageFlags.Dynamic)
+                    BoidTargetEntity = GetEntity(authoring.BoidTargetPrefab, TransformUsageFlags.Dynamic),
+                    StaticEntity = GetEntity(authoring.StaticEntityPrefab, TransformUsageFlags.Renderable),
+                    StaticEntitiesGroupEntity = authoring.StaticEntitiesGroupPrefab != null ? 
+                        GetEntity(authoring.StaticEntitiesGroupPrefab, TransformUsageFlags.None) : 
+                        Entity.Null
                 });
             }
         }
@@ -35,5 +41,7 @@ namespace OceanViz3
         public Entity BoidSchoolEntity;
         public Entity BoidEntity;
         public Entity BoidTargetEntity;
+        public Entity StaticEntity;
+        public Entity StaticEntitiesGroupEntity;
     }
 }

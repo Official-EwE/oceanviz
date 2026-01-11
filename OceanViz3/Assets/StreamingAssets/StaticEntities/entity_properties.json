@@ -1,30 +1,263 @@
 [
     {
     "name": "Caulerpa Taxifolia",
-    "habitats": ["Shallow"]
+    "habitats": ["Shallow"],
+    "minScale": 0.8,
+    "maxScale": 1.2,
+    "rigidity": 0.0,
+    "wavesMotionStrength": 0.0,
+    "maxPopulation": 300000
     },
     {
     "name": "Cystoseira",
-    "habitats": ["Shallow"]
+    "habitats": ["Shallow"],
+    "minScale": 0.8,
+    "maxScale": 1.2,
+    "rigidity": 0.0,
+    "wavesMotionStrength": 0.0,
+    "maxPopulation": 300000
     },
     {
     "name": "European Flat Oyster",
-    "habitats": ["Shallow"]
+    "habitats": ["Shallow"],
+    "minScale": 0.8,
+    "maxScale": 1.2,
+    "rigidity": 1.0,
+    "wavesMotionStrength": 0.0,
+    "maxPopulation": 300000
     },
     {
     "name": "Halimeda Algae",
-    "habitats": ["Shallow"]
+    "habitats": ["Shallow"],
+    "minScale": 0.8,
+    "maxScale": 1.2,
+    "rigidity": 0.0,
+    "wavesMotionStrength": 0.0,
+    "maxPopulation": 300000
     },
     {
     "name": "Padina Pavonica",
-    "habitats": ["Shallow"]
+    "habitats": ["Shallow"],
+    "minScale": 0.8,
+    "maxScale": 1.2,
+    "rigidity": 0.0,
+    "wavesMotionStrength": 0.0,
+    "maxPopulation": 300000
     },
     {
     "name": "Posidonia Oceanica",
-    "habitats": ["Shallow"]
+    "habitats": ["Shallow", "Deep"],
+    "minScale": 0.8,
+    "maxScale": 1.2,
+    "rigidity": 0.0,
+    "wavesMotionStrength": 0.0,
+    "maxPopulation": 300000
     },
     {
-    "name": "Ulva Lactuca",
-    "habitats": ["Shallow"]
+    "name": "Sea Lettuce",
+    "habitats": ["Shallow"],
+    "minScale": 0.8,
+    "maxScale": 1.2,
+    "rigidity": 0.0,
+    "wavesMotionStrength": 0.0,
+    "maxPopulation": 300000
+    },
+    {
+    "name": "Nobel Pen Shell",
+    "habitats": ["Shallow"],
+    "minScale": 0.8,
+    "maxScale": 1.2,
+    "rigidity": 1.0,
+    "wavesMotionStrength": 0.0,
+    "maxPopulation": 300000
+    },
+    {
+    "name": "Coralline Algae",
+    "habitats": ["Shallow"],
+    "minScale": 0.8,
+    "maxScale": 1.2,
+    "rigidity": 0.0,
+    "wavesMotionStrength": 0.0,
+    "maxPopulation": 300000
+    },
+    {
+    "name": "Red Algae",
+    "habitats": ["Shallow"],
+    "minScale": 0.8,
+    "maxScale": 1.2,
+    "rigidity": 0.0,
+    "wavesMotionStrength": 0.0,
+    "maxPopulation": 300000
+    },
+    {
+    "name": "Sargassum",
+    "habitats": ["WaterSurface"],
+    "minScale": 0.8,
+    "maxScale": 1.2,
+    "rigidity": 1.0,
+    "wavesMotionStrength": 1.0,
+    "maxPopulation": 10000
+    },
+    {
+    "name": "Red Coral",
+    "habitats": ["Shallow"],
+    "minScale": 0.8,
+    "maxScale": 1.2,
+    "rigidity": 0.0,
+    "wavesMotionStrength": 0.0,
+    "maxPopulation": 300000
+    },
+    {
+    "name": "Gorgonian Coral Dead",
+    "habitats": ["Shallow"],
+    "minScale": 0.8,
+    "maxScale": 1.2,
+    "rigidity": 0.0,
+    "wavesMotionStrength": 0.0,
+    "maxPopulation": 300000
+    },
+    {
+    "name": "Gorgonian Coral",
+    "habitats": ["Shallow"],
+    "minScale": 0.8,
+    "maxScale": 1.2,
+    "rigidity": 0.0,
+    "wavesMotionStrength": 0.0,
+    "maxPopulation": 300000
+    },
+    {
+    "name": "Gorgonian Coral Dead",
+    "habitats": ["Shallow"],
+    "minScale": 0.8,
+    "maxScale": 1.2,
+    "rigidity": 1.0,
+    "wavesMotionStrength": 0.0,
+    "maxPopulation": 300000
+    },
+    {
+    "name": "Fishing Net",
+    "habitats": ["Shallow"],
+    "minScale": 0.8,
+    "maxScale": 1.2,
+    "rigidity": 0.0,
+    "wavesMotionStrength": 0.0,
+    "maxPopulation": 5000
+    },
+    {
+    "name": "Wrecked Boat",
+    "habitats": ["Shallow"],
+    "minScale": 0.8,
+    "maxScale": 1.2,
+    "rigidity": 1.0,
+    "wavesMotionStrength": 0.0,
+    "maxPopulation": 60
+    },
+    {
+    "name": "WW2 Airplane",
+    "habitats": ["Shallow"],
+    "minScale": 0.8,
+    "maxScale": 1.2,
+    "rigidity": 1.0,
+    "wavesMotionStrength": 0.0,
+    "maxPopulation": 60
+    },
+    {
+    "name": "Old Tire",
+    "habitats": ["Shallow"],
+    "minScale": 0.8,
+    "maxScale": 1.2,
+    "rigidity": 1.0,
+    "wavesMotionStrength": 0.0,
+    "maxPopulation": 600
+    },
+    {
+    "name": "Rusted Wheel Rim",
+    "habitats": ["Shallow"],
+    "minScale": 0.8,
+    "maxScale": 1.2,
+    "rigidity": 1.0,
+    "wavesMotionStrength": 0.0,
+    "maxPopulation": 600
+    },
+    {
+    "name": "Surface Longliner",
+    "habitats": ["WaterSurface"],
+    "minScale": 0.8,
+    "maxScale": 1.2,
+    "rigidity": 1.0,
+    "wavesMotionStrength": 0.0,
+    "maxPopulation": 6
+    },
+    {
+    "name": "Bottom Trailer",
+    "habitats": ["WaterSurface"],
+    "minScale": 0.8,
+    "maxScale": 1.2,
+    "rigidity": 1.0,
+    "wavesMotionStrength": 0.0,
+    "maxPopulation": 6
+    },
+    {
+    "name": "Floating Turbine",
+    "habitats": ["WaterSurface"],
+    "minScale": 0.6,
+    "maxScale": 0.6,
+    "rigidity": 1.0,
+    "wavesMotionStrength": 0.0,
+    "maxPopulation": 6
+    },
+    {
+    "name": "Turbine Jacket",
+    "habitats": ["Shallow"],
+    "minScale": 0.6,
+    "maxScale": 0.6,
+    "rigidity": 1.0,
+    "wavesMotionStrength": 0.0,
+    "maxPopulation": 6
+    },
+    {
+    "name": "Porites",
+    "habitats": ["Shallow"],
+    "minScale": 0.8,
+    "maxScale": 1.2,
+    "rigidity": 0.9,
+    "wavesMotionStrength": 0.0,
+    "maxPopulation": 200000
+    },
+    {
+    "name": "Pectinida",
+    "habitats": ["Shallow"],
+    "minScale": 0.8,
+    "maxScale": 1.2,
+    "rigidity": 0.9,
+    "wavesMotionStrength": 0.0,
+    "maxPopulation": 200000
+    },
+    {
+    "name": "CardiumBivalve",
+    "habitats": ["Shallow"],
+    "minScale": 0.8,
+    "maxScale": 1.2,
+    "rigidity": 0.9,
+    "wavesMotionStrength": 0.0,
+    "maxPopulation": 200000
+    },
+    {
+    "name": "Kelp",
+    "habitats": ["Shallow", "Deep"],
+    "minScale": 0.4,
+    "maxScale": 1.4,
+    "rigidity": 0.0,
+    "wavesMotionStrength": 0.0,
+    "maxPopulation": 20000
+    },
+    {
+    "name": "Bladderwrack",
+    "habitats": ["Shallow"],
+    "minScale": 0.8,
+    "maxScale": 1.2,
+    "rigidity": 1.0,
+    "wavesMotionStrength": 0.0,
+    "maxPopulation": 300000
     }
 ]

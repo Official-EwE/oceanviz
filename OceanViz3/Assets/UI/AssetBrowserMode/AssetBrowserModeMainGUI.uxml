@@ -1,0 +1,28 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <ui:Template name="TurbidityRow" src="project://database/Assets/UI/TurbidityRow.uxml?fileID=9197481963319205126&amp;guid=7c857c9b9c0f50f4dab97a5bc23dfddf&amp;type=3#TurbidityRow" />
+    <ui:VisualElement name="MainGUI" picking-mode="Ignore" style="flex-grow: 1; flex-direction: row; visibility: visible; display: flex; opacity: 1;">
+        <ui:VisualElement name="DataFeeder" style="flex-grow: 1; background-color: rgb(48, 48, 48); max-width: 252px;">
+            <ui:Label tabindex="-1" text="Dynamic" parse-escape-sequences="true" display-tooltip-when-elided="true" name="DynamicLabel" style="align-items: auto; align-self: auto; -unity-text-align: upper-center; -unity-font-style: bold; background-color: rgba(0, 0, 0, 0.29); display: none;" />
+            <ui:VisualElement style="flex-grow: initial; flex-direction: row; align-items: center; justify-content: space-around; align-self: stretch;">
+                <ui:DropdownField index="-1" name="AssetPickerDropdownField" style="width: 213px; height: 21px;" />
+                <ui:Button parse-escape-sequences="true" display-tooltip-when-elided="true" name="ReloadButton" style="justify-content: flex-start; align-items: auto; align-self: center; min-width: 21px; min-height: 21px; background-image: url(&quot;project://database/Assets/UI/Icons/reload.png?fileID=2800000&amp;guid=bed2429f9df09884390bc18b7a8ee0b2&amp;type=3#reload&quot;); flex-grow: initial;" />
+            </ui:VisualElement>
+            <ui:VisualElement style="flex-grow: initial; flex-direction: row; align-items: center; justify-content: center; align-self: stretch;">
+                <ui:Button parse-escape-sequences="true" display-tooltip-when-elided="true" name="PreviousButton" style="justify-content: flex-start; align-items: auto; align-self: center; min-width: 21px; min-height: 21px; background-image: url(&quot;project://database/Assets/UI/Icons/previous.png?fileID=2800000&amp;guid=9f334709148638a45ba4f6140f461ca7&amp;type=3#previous&quot;); flex-grow: initial;" />
+                <ui:Button parse-escape-sequences="true" display-tooltip-when-elided="true" name="NextButton" style="justify-content: flex-start; align-items: auto; align-self: center; min-width: 21px; min-height: 21px; background-image: url(&quot;project://database/Assets/UI/Icons/next.png?fileID=2800000&amp;guid=63f24d46668cbc24994d5c94bfdba77d&amp;type=3#next&quot;); flex-grow: initial;" />
+            </ui:VisualElement>
+            <ui:Label tabindex="-1" text="Environment" parse-escape-sequences="true" display-tooltip-when-elided="true" name="EnvironmentLabel" style="align-items: auto; align-self: auto; -unity-text-align: upper-center; -unity-font-style: bold; background-color: rgba(0, 0, 0, 0.29);" />
+            <ui:Instance template="TurbidityRow" name="TurbidityRow" style="display: none;" />
+            <ui:VisualElement name="LocationRow" style="flex-grow: 1; max-height: 26px; padding-right: 20px; padding-left: 20px;">
+                <ui:DropdownField label="Location" index="-1" name="LocationsDropdownField" />
+            </ui:VisualElement>
+            <ui:Label tabindex="-1" parse-escape-sequences="true" display-tooltip-when-elided="true" name="EntityDescriptionLabel" />
+        </ui:VisualElement>
+        <ui:VisualElement style="flex-grow: 1; flex-direction: column; opacity: 1; align-items: auto; justify-content: space-between; align-self: stretch;">
+            <ui:VisualElement name="3DInteractionArea" style="flex-grow: 1; flex-direction: column; align-items: flex-start; justify-content: flex-start; align-self: stretch;">
+                <ui:Button text="Menu" parse-escape-sequences="true" display-tooltip-when-elided="true" name="MainMenuButton" style="align-self: auto; justify-content: flex-start; -unity-text-align: upper-center; align-items: auto;" />
+                <ui:Label tabindex="-1" parse-escape-sequences="true" display-tooltip-when-elided="true" name="EntityNameLabel" style="align-self: center; align-items: center; -unity-font-style: bold; font-size: 22px; color: rgb(255, 255, 255);" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

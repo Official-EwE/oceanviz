@@ -1,48 +1,44 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// Generates Perlin noise textures with customizable parameters.
+/// Generates Perlin noise textures.
 /// </summary>
-public class NoiseGenerator : MonoBehaviour
+public static class NoiseGenerator
 {
     /// <summary>
     /// Generates a grayscale noise texture using Perlin noise.
     /// </summary>
-    /// <param name="width">The width of the texture in pixels.</param>
-    /// <param name="height">The height of the texture in pixels.</param>
-    /// <param name="offsetX">The X offset for the noise pattern.</param>
-    /// <param name="offsetY">The Y offset for the noise pattern.</param>
-    /// <param name="scale">The scale factor for the noise. Higher values create larger patterns.</param>
-    /// <param name="power">Optional power value to adjust the contrast of the noise. Default is 1.0f.</param>
-    /// <returns>A new Texture2D containing the generated noise pattern.</returns>
-    public static Texture2D GenerateNoiseTexture(int width, int height, float offsetX, float offsetY, int scale, float power = 1f)
+    /// <param name="width">Texture width.</param>
+    /// <param name="height">Texture height.</param>
+    /// <param name="offsetX">Global X offset for the noise pattern.</param>
+    /// <param name="offsetY">Global Y offset for the noise pattern.</param>
+    /// <param name="scale">Scale (frequency) of the noise. Lower values = larger features.</param>
+    /// <returns>A Texture2D containing the generated Perlin noise.</returns>
+    public static Texture2D GenerateNoiseTexture(int width, int height, float offsetX, float offsetY, float scale)
     {
-        // Create a new texture
-        Texture2D noiseTexture = new Texture2D(width, height);
+        if (scale <= 0) scale = 0.0001f; // Prevent division by zero
 
-        // Generate a random seed
-        float randomSeed = Random.Range(0f, 1000f);
+        Texture2D noiseTexture = new Texture2D(width, height, TextureFormat.R8, false);
+        noiseTexture.filterMode = FilterMode.Bilinear; // Use bilinear for smoother sampling
 
-        // For each pixel in the texture
-        for (int x = 0; x < noiseTexture.width; x++)
+        Color32[] pixels = new Color32[width * height];
+
+        for (int y = 0; y < height; y++)
         {
-            for (int y = 0; y < noiseTexture.height; y++)
+            for (int x = 0; x < width; x++)
             {
-                // Calculate the noise value with the random seed
-                float noiseValue = Mathf.PerlinNoise((x + offsetX + randomSeed) / scale, (y + offsetY + randomSeed) / scale);
-                noiseValue = Mathf.Pow(noiseValue, power);
-
-                // Set the pixel color according to the noise value
-                noiseTexture.SetPixel(x, y, new Color(noiseValue, noiseValue, noiseValue));
+                // Sample Perlin noise. Output range is 0 to 1
+                float noiseValue = Mathf.PerlinNoise((x + offsetX) / scale, (y + offsetY) / scale);
+                
+                // Convert noise value to grayscale color
+                byte colorValue = (byte)(noiseValue * 255);
+                pixels[y * width + x] = new Color32(colorValue, colorValue, colorValue, 255);
             }
         }
 
-        // Apply the changes to the texture
-        noiseTexture.Apply();
+        noiseTexture.SetPixels32(pixels);
+        noiseTexture.Apply(false); // Apply without mipmaps
 
-        // Return the texture
         return noiseTexture;
     }
 }

@@ -2184,7 +2184,7 @@ MonoBehaviour:
       m_Type:
         m_SerializableType: UnityEngine.Vector3, UnityEngine.CoreModule, Version=0.0.0.0,
           Culture=neutral, PublicKeyToken=null
-      m_SerializableObject: '{"x":0.017758099362254144,"y":0.019696205854415895,"z":0.017273573204874994}'
+      m_SerializableObject: '{"x":0.23074007034301759,"y":0.26225072145462038,"z":0.23074007034301759}'
     m_Space: 2147483647
   m_Property:
     name: A
@@ -2320,7 +2320,7 @@ MonoBehaviour:
       m_Type:
         m_SerializableType: UnityEngine.Vector3, UnityEngine.CoreModule, Version=0.0.0.0,
           Culture=neutral, PublicKeyToken=null
-      m_SerializableObject: '{"x":0.3736799955368042,"y":0.4320000112056732,"z":0.3736799955368042}'
+      m_SerializableObject: '{"x":0.6736363768577576,"y":0.7799999713897705,"z":0.6736363768577576}'
     m_Space: 2147483647
   m_Property:
     name: B

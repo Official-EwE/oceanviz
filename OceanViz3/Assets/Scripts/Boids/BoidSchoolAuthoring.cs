@@ -37,16 +37,17 @@ namespace OceanViz3
             public override void Bake(BoidSchoolAuthoring authoring)
             {
                 var entity = GetEntity(TransformUsageFlags.Renderable);
-                AddComponent(entity, new BoidSchool
+                AddComponent(entity, new BoidSchoolComponent
                 {
                     DynamicEntityId = -1,
                     BoidSchoolId = -1,
-                    Prefab = GetEntity(authoring.DefaultPrefab, TransformUsageFlags.Dynamic),
+                    BoidPrototype = GetEntity(authoring.DefaultPrefab, TransformUsageFlags.Renderable),
                     BoidTargetPrefab = GetEntity(authoring.boidTargetAuthoring, TransformUsageFlags.Dynamic),
                     Count = 0,
                     RequestedCount = -1,
                     DestroyRequested = false,
                     ShaderUpdateRequested = false,
+                    NumberOfLODs = -1,
                 });
             }
         }
@@ -55,15 +56,15 @@ namespace OceanViz3
     /// <summary>
     /// Component data structure that holds all the configuration and state for a boid school
     /// </summary>
-    public struct BoidSchool : IComponentData
+    public struct BoidSchoolComponent : IComponentData
     {
         #region Main Properties
         /// <summary>Unique identifier for the dynamic entity system</summary>
         public int DynamicEntityId;
         /// <summary>Unique identifier for this boid school</summary>
         public int BoidSchoolId;
-        /// <summary>Entity prefab used for spawning individual boids</summary>
-        public Entity Prefab;
+        /// <summary>Entity prototype used for spawning individual boids</summary>
+        public Entity BoidPrototype;
         /// <summary>Center point of the boid school bounds</summary>
         public float3 BoundsCenter;
         /// <summary>Size of the boid school bounds</summary>
@@ -74,6 +75,8 @@ namespace OceanViz3
         public int RequestedCount;
         /// <summary>Flag indicating if the school should be destroyed</summary>
         public bool DestroyRequested;
+        /// <summary>Number of LOD levels available for this boid school</summary>
+        public int NumberOfLODs;
         #endregion
 
         #region Boid Behavior Settings
@@ -97,6 +100,8 @@ namespace OceanViz3
         public bool Prey;
         /// <summary>Radius for spatial partitioning cells</summary>
         public float CellRadius;
+        /// <summary>Maximum rate at which boids can turn</summary>
+        public float MaxTurnRate;
         /// <summary>Speed of transitioning between states</summary>
         public float StateTransitionSpeed;
         /// <summary>Minimum time before state change</summary>
@@ -105,6 +110,10 @@ namespace OceanViz3
         public float StateChangeTimerMax;
         /// <summary>Whether this boid uses bone-based animation instead of shader-based animation</summary>
         public bool BoneAnimated;
+        /// <summary>Minimum speed modifier</summary>
+        public float SpeedModifierMin;
+        /// <summary>Maximum speed modifier</summary>
+        public float SpeedModifierMax;
         #endregion
 
         #region Target Properties
@@ -114,6 +123,8 @@ namespace OceanViz3
         public Entity Target;
         /// <summary>Timer for target repositioning</summary>
         public float TargetRepositionTimer;
+        /// <summary>Deterministic iteration counter for target repositioning</summary>
+        public int TargetRepositionIteration;
         #endregion
 
         #region Shader Properties
@@ -154,6 +165,10 @@ namespace OceanViz3
         public float PositiveYClip;
         /// <summary>Negative Y clipping value</summary>
         public float NegativeYClip;
+        
+        // Base mesh size info (from source mesh, no per-instance scaling)
+        public float3 MeshSize;
+        public float MeshLargestDimension;
         #endregion
     }
 }

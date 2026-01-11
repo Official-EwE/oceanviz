@@ -11,6 +11,8 @@ TagManager:
   - Seabed
   - SeabedPrefab
   - BoidBounds
+  - MeshHabitat
+  - Location
   layers:
   - Default
   - TransparentFX
@@ -21,7 +23,7 @@ TagManager:
   - Fauna
   - WaterSurface
   - CameraColliders
-  - 
+  - Debris
   - 
   - 
   - 

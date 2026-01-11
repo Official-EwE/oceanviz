@@ -18,6 +18,7 @@ using System.Linq;
 using Cinemachine;
 using System.Threading.Tasks;
 using System.Runtime.CompilerServices;
+using Unity.Rendering;
 
 namespace OceanViz3 {
 
@@ -31,6 +32,12 @@ public class MainScene : MonoBehaviour
 	/// Indicates whether the MainScene is fully initialized and ready for operations. Used by the SimulationAPI to check if the scene is ready to receive state updates.
 	/// </summary>
 	public static bool IsReady { get; private set; }
+
+	public static void SetReadyState(bool state)
+	{
+		IsReady = state;
+	}
+
 	/// <summary>
 	/// Maximum number of simultaneous views supported by the application.
 	/// </summary>
@@ -59,6 +66,7 @@ public class MainScene : MonoBehaviour
 	/// Unique identifier counter for dynamic entity groups.
 	/// </summary>
 	private int nextDynamicEntityGroupId = 0;
+	private int nextStaticEntityGroupId = 0;
 	
 	/// <summary>
 	/// List of active static entity groups (e.g., coral, seaweed) in the scene.
@@ -67,20 +75,13 @@ public class MainScene : MonoBehaviour
 	public List<StaticEntitiesGroup> staticEntitiesGroups = new List<StaticEntitiesGroup>();
 
 	//// UI
-	public GameObject UIDocument;
-	private VisualElement gui;
-	private DropdownField addDynamicRowDropdownField;
-	private DropdownField addStaticRowDropdownField;
-	private DropdownField locationsDropdownField;
-	private VisualElement addDynamicRowButton;
-	private VisualElement addStaticRowButton;
-	public VisualTreeAsset DataRow;
-	public VisualTreeAsset StaticGroupDataRow;
+	public GameObject mainMenuUIDocument;
+	private VisualElement mainMenuRoot;
+	private bool isMainMenuVisible = false;
 	
 	//// Game Objects
 	public GameObject templateTerrain;
 	public GameObject mainCamera;
-	public GameObject cameraRig;
 	public GameObject currentLocationGameObject;
 	
 	//// Rendering
@@ -93,13 +94,35 @@ public class MainScene : MonoBehaviour
 	private World world;
 	private EntityManager entityManager;
 	
-	//// Events
-	private EventCallback<ChangeEvent<string>> locationChangeCallback;
+	private NoiseTextureManager noiseTextureManager;
+
+	private float lastEntitiesGraphicsStatsLogTime = 0f;
+
+	// App Mode Management
+	public AppMode currentMode { get; private set; }
+	public SimulationModeManager simulationModeManager;
+	public AssetBrowserModeManager assetBrowserModeManager;
+	private AppModeManager currentModeManager;
+	private bool isHudless;
 
 	private void Awake()
 	{
 		world = World.DefaultGameObjectInjectionWorld;
 		entityManager = world.EntityManager;
+
+		// --- Ensure SceneData singleton entity exists ---
+		var sceneDataQuery = entityManager.CreateEntityQuery(typeof(SceneData));
+		if (sceneDataQuery.CalculateEntityCount() == 0)
+		{
+			// Use mainCamera position if available, otherwise default to zero
+			float3 cameraPos = float3.zero;
+			if (mainCamera != null)
+			{
+				cameraPos = mainCamera.transform.position;
+			}
+			Entity sceneDataEntity = entityManager.CreateEntity(typeof(SceneData));
+			entityManager.SetComponentData(sceneDataEntity, new SceneData { CameraPosition = cameraPos });
+		}
 	}
 	
 	private void Start()
@@ -115,75 +138,38 @@ public class MainScene : MonoBehaviour
 			feature.SetActive(true);
 		}
 
-		//// UI
-		gui = UIDocument.GetComponent<UIDocument>().rootVisualElement;
+		// Initialize NoiseTextureManager
+		noiseTextureManager = NoiseTextureManager.Instance;
+		if (noiseTextureManager == null)
+		{
+			Debug.LogError("[MainScene] Failed to initialize NoiseTextureManager");
+			return;
+		}
 		
 		//// Locations
 		// Read StreamingAssets/Locations folder to populate the locationNames list
 		UpdateLocationPresets();
 		
-		// LocationsDropdownField
-		locationsDropdownField = gui.Q<DropdownField>("LocationsDropdownField");
-		for (int i = 0; i < locationNames.Count; i++)
-		{
-			locationsDropdownField.choices.Add(locationNames[i]);
-		}
-		
-		// Set the default value of the dropdown to the first element of the choices list
-		locationsDropdownField.value = locationsDropdownField.choices[0];
+		//// Presets
+		// Read StreamingAssets/Locations folder to populate the presets lists
+		GroupPresetsManager.Instance.UpdatePresets();
+
+		// Set current location name before setting up mode managers
+		var firstLocation = locationPresets.First.Value.Key;
+		currentLocationName = firstLocation;
+
+		// Setup mode managers
+		simulationModeManager.Setup(this);
+		assetBrowserModeManager.Setup(this);
+
+		//// UI
+		// Hide main menu initially
+		mainMenuUIDocument.SetActive(false);
+
+		// Register main menu button callbacks
 		
 		// Load the first location scene
-		SceneManager.LoadScene(locationsDropdownField.choices[0], LoadSceneMode.Additive);
-		currentLocationName = locationsDropdownField.choices[0];
-		
-		// Store the callback
-		locationChangeCallback = (evt) => OnLocationLocationDropdownFieldChanged(evt.newValue);
-		locationsDropdownField.RegisterCallback(locationChangeCallback);
-		
-		//// Presets
-		if (DataRow == null){Debug.LogError("[MainScene] DataRow is null");}
-		if (StaticGroupDataRow == null){Debug.LogError("[MainScene] DataRow is null");}
-
-		// Read StreamingAssets folder to populate the presets lists
-		GroupPresetsManager.Instance.UpdatePresets();
-		
-		addDynamicRowDropdownField = gui.Q<DropdownField>("AddDynamicRowDropdownField");
-		addStaticRowDropdownField = gui.Q<DropdownField>("AddStaticRowDropdownField");
-
-		// Populate the dropdowns with preset names
-		foreach (DynamicEntityPreset dynamicEntityPreset in GroupPresetsManager.Instance.dynamicEntitiesPresetsList)
-		{
-			addDynamicRowDropdownField.choices.Add(dynamicEntityPreset.name);
-		}
-		foreach (StaticEntityPreset staticEntityPreset in GroupPresetsManager.Instance.staticEntitiesPresetsList)
-		{
-			addStaticRowDropdownField.choices.Add(staticEntityPreset.name);
-		}
-
-		// Set the default value of the dropdown to the first element of the choices list
-		addDynamicRowDropdownField.value = addDynamicRowDropdownField.choices[0];
-		addStaticRowDropdownField.value = addStaticRowDropdownField.choices[0];
-
-		// AddRowButton
-		addDynamicRowButton = gui.Q<Button>("AddDynamicRowButton");
-		addDynamicRowButton.RegisterCallback<ClickEvent>((evt) => SpawnSelectedDynamicPreset());
-		addStaticRowButton = gui.Q<Button>("AddStaticRowButton");
-		addStaticRowButton.RegisterCallback<ClickEvent>((evt) => SpawnSelectedStaticPreset());
-
-		// ViewCount buttons callbacks
-		gui.Q<Button>("SetViews1").RegisterCallback<ClickEvent>((evt) => SetViewCountAndUpdateGUIState(1));
-		gui.Q<Button>("SetViews2").RegisterCallback<ClickEvent>((evt) => SetViewCountAndUpdateGUIState(2));
-		gui.Q<Button>("SetViews3").RegisterCallback<ClickEvent>((evt) => SetViewCountAndUpdateGUIState(3));
-		gui.Q<Button>("SetViews4").RegisterCallback<ClickEvent>((evt) => SetViewCountAndUpdateGUIState(4));
-
-		// Add first view
-		SetViewCountAndUpdateGUIState(1);
-
-		// Swim mode
-		gui.Q<Button>("ActivateSwimModeButton").RegisterCallback<ClickEvent>((evt) => ActivateSwimMode());
-		
-		// Automatic camera mode
-		gui.Q<Button>("ActivateAutomaticCameraModeButton").RegisterCallback<ClickEvent>((evt) => ActivateAutomaticCameraMode());
+		SceneManager.LoadScene(firstLocation, LoadSceneMode.Additive);
 		
 		StartCoroutine(WaitForECSInitialization());
     }
@@ -217,14 +203,16 @@ public class MainScene : MonoBehaviour
         Debug.Log("[MainScene] ECS World initialized. MainScene is now ready.");
 
         simulationAPI.Setup(this);
+		
+		// Start in Simulation mode
+		SwitchMode(AppMode.Simulation);
     }
 	
-	private struct TempLocationPreset
-	{
-		public string name;
-		public string turbidity_low_color;
-		public string turbidity_high_color;
-	}
+    private struct TempLocationPreset
+    {
+        public string name;
+        public int wind_turbine_pylon_amount;
+    }
 	
 	/// <summary>
 	/// Updates the collection of available location presets from the StreamingAssets folder.
@@ -234,10 +222,11 @@ public class MainScene : MonoBehaviour
 		IsReady = false;
 		
 		locationPresets = new LinkedList<KeyValuePair<string, LocationPreset>>();
-		string[] locationFolders = Directory.GetDirectories(Path.Combine(Application.streamingAssetsPath, "Locations"));
+		locationNames.Clear();
+        string[] locationFolders = Directory.GetDirectories(Path.Combine(Application.streamingAssetsPath, "Locations"));
 		foreach (string folder in locationFolders)
 		{
-			var jsonPath = Path.Combine(Application.streamingAssetsPath, "Locations", folder, "location_properties.json");
+            var jsonPath = Path.Combine(Application.streamingAssetsPath, "Locations", folder, "location_properties.json");
 			if (!File.Exists(jsonPath))
 			{
 				Debug.LogError($"[MainScene] location_properties.json not found in {jsonPath}");
@@ -248,15 +237,14 @@ public class MainScene : MonoBehaviour
 			{
 				TempLocationPreset tempPreset = JsonUtility.FromJson<TempLocationPreset>(json);
 
-				// Convert hex strings to Color
 				LocationPreset locationPreset = new LocationPreset
 				{
-					name = tempPreset.name,
-					turbidity_low_color = HexToColor(tempPreset.turbidity_low_color),
-					turbidity_high_color = HexToColor(tempPreset.turbidity_high_color)
+                    name = tempPreset.name,
+                    wind_turbine_pylon_amount = tempPreset.wind_turbine_pylon_amount
 				};
 
 				locationPresets.AddLast(new KeyValuePair<string, LocationPreset>(tempPreset.name, locationPreset));
+				locationNames.Add(tempPreset.name);
 			}
 			catch (Exception e)
 			{
@@ -272,48 +260,21 @@ public class MainScene : MonoBehaviour
 	/// </summary>
 	/// <param name="hex">Hexadecimal color string (format: "0xRRGGBB" or "#RRGGBB")</param>
 	/// <returns>Unity Color object</returns>
-	private Color HexToColor(string hex)
-	{
-		hex = hex.Replace("0x", "").Replace("#", "");
-		byte r = byte.Parse(hex.Substring(0, 2), System.Globalization.NumberStyles.HexNumber);
-		byte g = byte.Parse(hex.Substring(2, 2), System.Globalization.NumberStyles.HexNumber);
-		byte b = byte.Parse(hex.Substring(4, 2), System.Globalization.NumberStyles.HexNumber);
-		return new Color32(r, g, b, 255);
-	}
+    // Removed color parsing; turbidity color settings are no longer used
 
-	private void OnLocationLocationDropdownFieldChanged(string locationName)
-	{
-		IsReady = false;
-		try
-		{
-			UnloadLocation();
-			LoadLocation(locationName);
-		}
-		finally
-		{
-			IsReady = true;
-		}
-	}
-	
 	public void UnloadLocation()
 	{
 		IsReady = false;
 		Debug.Log("[MainScene] Unloading location: " + currentLocationName);
-		SceneManager.UnloadSceneAsync(currentLocationName);
+		if (SceneManager.GetSceneByName(currentLocationName).isLoaded)
+		{
+			SceneManager.UnloadSceneAsync(currentLocationName);
+		}
 	}
 	
 	public void LoadLocationAndUpdateGUIState(string locationName)
 	{
-		// Temporarily unregister the callback using the stored reference
-		locationsDropdownField.UnregisterCallback(locationChangeCallback);
-		
-		// Update the dropdown value
-		locationsDropdownField.value = locationName;
-		
-		// Re-register the callback using the stored reference
-		locationsDropdownField.RegisterCallback(locationChangeCallback);
-		
-		LoadLocation(locationName);
+		simulationModeManager.LoadLocationAndUpdateGUIState(locationName);
 	}
 
 	/// <summary>
@@ -334,6 +295,7 @@ public class MainScene : MonoBehaviour
 		{
 			entityManager.DestroyEntity(obstacleEntity);
 		}
+		obstacleEntities.Dispose();
 
 		// Load the new location scene
 		var loadOperation = SceneManager.LoadSceneAsync(locationName, LoadSceneMode.Additive);
@@ -348,49 +310,14 @@ public class MainScene : MonoBehaviour
 	private IEnumerator WaitForLocationSetup(string locationName)
 	{
 		// Wait until currentLocationScript is set and initialized
-		while (currentLocationScript == null || !currentLocationScript.isActiveAndEnabled)
+		while (currentLocationScript == null || !currentLocationScript.isActiveAndEnabled || !LocationScript.IsReady)
 		{
 			yield return null;
 		}
 
-		Debug.Log($"[MainScene] Location {locationName} is ready, updating entity groups");
+		Debug.Log($"[MainScene] Location {locationName} is ready, notifying current mode manager.");
 		
-		// After the new location is loaded, update all dynamic entities groups
-		foreach (DynamicEntitiesGroup group in dynamicEntitiesGroups)
-		{
-			// Get new boid bounds for the group's habitat
-			List<GameObject> newBoidBounds = currentLocationScript.GetBoidBoundsByBiomeName(group.dynamicEntityPreset.habitat);
-			if (newBoidBounds == null || newBoidBounds.Count == 0)
-			{
-				Debug.LogWarning($"[MainScene] No boid bounds found for habitat: {group.dynamicEntityPreset.habitat} in new location");
-				continue;
-			}
-			
-			// Update the group with new bounds
-			group.UpdateBoidBounds(newBoidBounds);
-		}
-
-		// Update all static entities groups
-		foreach (StaticEntitiesGroup group in staticEntitiesGroups)
-		{
-			// Get new terrain and splatmap for the group
-			Terrain newTerrain = currentLocationScript.GetTerrain();
-			if (newTerrain == null)
-			{
-				Debug.LogError($"[MainScene] No terrain found in location {locationName}. Terrain reference might be missing in LocationScript.");
-				continue;
-			}
-			
-			Texture2D newBiomeSplatmap = currentLocationScript.GetFloraBiomeSplatmap(group.staticEntityPreset.habitats[0]); // TODO: Handle multiple habitats
-			if (newBiomeSplatmap == null)
-			{
-				Debug.LogWarning($"[MainScene] No splatmap found for habitat: {group.staticEntityPreset.habitats[0]} in new location");
-				continue;
-			}
-
-			// Update the group with new terrain and splatmap
-			group.UpdateTerrainAndSplatmap(newTerrain, newBiomeSplatmap);
-		}
+		currentModeManager?.OnLocationReady();
 		
 		IsReady = true;
 	}
@@ -411,193 +338,58 @@ public class MainScene : MonoBehaviour
 		}
 		
 		LocationPreset currentPreset = presetPair.Value;
-		currentLocationScript.Setup(gui.Q<VisualElement>("TurbidityRow"), currentPreset);
 		
-		IsReady = true;
+		currentLocationScript.Setup(simulationModeManager.mainGui.Q<VisualElement>("TurbidityRow"), currentPreset, simulationModeManager.turbidityPerView, simulationModeManager.views.Count, this);
+		
+		//IsReady = true; // This will be set in WaitForLocationSetup
 	}
 	
-	public void SpawnSelectedDynamicPreset()
+	public void SpawnDynamicPreset(string name)
 	{
-		SpawnDynamicPreset(addDynamicRowDropdownField.value);
+		simulationModeManager.SpawnDynamicPreset(name);
 	}
-	
+
 	/// <summary>
-	/// Creates and spawns a new dynamic entity group (e.g., fish school) based on the specified preset.
+	/// Spawns a dynamic preset with a custom group display name for this session.
 	/// </summary>
-	/// <param name="name">Name of the preset to spawn</param>
-	public async void SpawnDynamicPreset(string name)
+	/// <param name="presetName">Name of the dynamic preset</param>
+	/// <param name="groupName">Display name for the group</param>
+	public void SpawnDynamicPreset(string presetName, string groupName)
 	{
-		IsReady = false;
-		if (GroupPresetsManager.Instance == null)
-		{
-			Debug.LogError("[MainScene] GroupPresetsManager.Instance is null. Make sure it's properly initialized.");
-			return;
-		}
-		
-		Debug.Log($"[MainScene] Attempting to spawn dynamic preset: {name}");
-		DynamicEntityPreset selectedPreset = GroupPresetsManager.Instance.dynamicEntitiesPresetsList.Find(flockPreset => flockPreset.name == name);
-		
-		if (selectedPreset == null)
-		{
-			Debug.LogError($"[MainScene] Error: Dynamic preset '{name}' not found in the presets list.");
-			return;
-		}
-
-		VisualElement dataRow = DataRow.CloneTree();
-		gui.Q<VisualElement>("DataRows").Add(dataRow);
-		
-		List<GameObject> filteredBoidBounds = currentLocationScript.GetBoidBoundsByBiomeName(selectedPreset.habitat);
-		if (filteredBoidBounds == null || filteredBoidBounds.Count == 0)
-		{
-			Debug.LogWarning($"[MainScene] No boid bounds found for habitat: {selectedPreset.habitat}");
-		}
-		else
-		{
-			Debug.Log($"[MainScene] Found {filteredBoidBounds.Count} boid bounds for habitat: {selectedPreset.habitat}");
-		}
-
-		DynamicEntitiesGroup dynamicEntitiesGroup = new DynamicEntitiesGroup();
-		dynamicEntitiesGroup.Setup(
-			name: selectedPreset.name,
-			dynamicEntityId: nextDynamicEntityGroupId,
-			dynamicEntityPreset: selectedPreset,
-			dataRow: dataRow,
-			viewsCount: views.Count,
-			boidBounds: filteredBoidBounds
-		);
-		
-		try
-		{
-			await dynamicEntitiesGroup.LoadAndSpawnGroup();
-			dynamicEntitiesGroups.Add(dynamicEntitiesGroup);
-			dynamicEntitiesGroup.OnDeleteRequest += HandleGroupDeleteRequest;
-			nextDynamicEntityGroupId++;
-		}
-		catch (Exception e)
-		{
-			Debug.LogError($"[MainScene] Failed to load and spawn dynamic entities group: {e.Message}");
-			gui.Q<VisualElement>("DataRows").Remove(dataRow);
-			return;
-		}
-		finally
-		{
-			IsReady = true;
-			Debug.Log("[MainScene] SpawnDynamicPreset completed, IsReady set to true");
-		}
-	}
-	
-	public void SpawnSelectedStaticPreset()
-	{
-		SpawnStaticPreset(addStaticRowDropdownField.value, addStaticRowDropdownField.value);
+		simulationModeManager.SpawnDynamicPreset(presetName, groupName);
 	}
 	
 	/// <summary>
-	/// Creates and spawns a new static entity group (e.g., coral formation) based on the specified preset.
+	/// Creates and spawns a new static entity group based on the specified preset.
 	/// </summary>
 	/// <param name="presetName">Name of the preset to use</param>
 	/// <param name="groupName">Name for the new group instance</param>
-	public void SpawnStaticPreset(string presetName, string groupName)
+	public async Task SpawnStaticPreset(string presetName, string groupName)
 	{
-		IsReady = false;
-		try
-		{
-			StaticEntityPreset? staticEntityPreset = null;
-			bool presetFound = false;
-
-			// Find the selected preset
-			foreach (var preset in GroupPresetsManager.Instance.staticEntitiesPresetsList)
-			{
-				if (preset.name == presetName)
-				{
-					staticEntityPreset = preset;
-					presetFound = true;
-					break;
-				}
-			}
-
-			if (!presetFound)
-			{
-				string errorMessage = $"[MainScene] Error: StaticEntitiesGroup preset '{addStaticRowDropdownField.value}' not found in the floraPresets list.";
-				Debug.LogError(errorMessage);
-				return;
-			}
-			
-			Debug.Log("[MainScene] Adding staticEntitiesGroup: " + staticEntityPreset.name);
-
-			// Add a new DataRow to the UIDocument
-			VisualElement dataRow = StaticGroupDataRow.CloneTree();
-			gui.Q<VisualElement>("StaticDataRows").Add(dataRow);
-			dataRow.Q<Slider>("Slider").label = groupName;
-			
-			// Get terrain from the current location
-			Terrain terrain = currentLocationScript.GetTerrain();
-			
-			// Get splatmap texture from the current location
-			Texture2D biomeSplatmap = currentLocationScript.GetFloraBiomeSplatmap(staticEntityPreset.habitats[0]); // TODO: Handle multiple habitats
-			if (biomeSplatmap == null)
-			{
-				Debug.LogError("[MainScene] Error: Splatmap not found for habitat " + staticEntityPreset.habitats[0]);
-				return;
-			}
-			
-			// StaticEntitiesGroup
-			StaticEntitiesGroup staticEntitiesGroup = new StaticEntitiesGroup();
-			staticEntitiesGroup.Setup(
-				groupName: groupName,
-				presetName: presetName,
-				staticEntityPreset: staticEntityPreset,
-				dataRow: dataRow,
-				viewsCount: views.Count,
-				terrain: terrain,
-				splatmap: biomeSplatmap);
-			
-			try
-			{
-				staticEntitiesGroup.LoadAndSpawnStaticGroup();
-				staticEntitiesGroups.Add(staticEntitiesGroup);
-				staticEntitiesGroup.UpdateViewsCount(views.Count);
-				staticEntitiesGroup.OnDeleteRequested += HandleStaticGroupDeleteRequest;
-			}
-			catch (Exception e)
-			{
-				Debug.LogError($"[MainScene] Error loading and spawning staticEntitiesGroup: {e.Message}");
-				gui.Q<VisualElement>("StaticDataRows").Remove(dataRow);
-			}
-		}
-		finally
-		{
-			IsReady = true;
-		}
+		await simulationModeManager.SpawnStaticPreset(presetName, groupName);
 	}
 
-	private void HandleGroupDeleteRequest(DynamicEntitiesGroup dynamicEntitiesGroup)
+    private void Update()
 	{
-		dynamicEntitiesGroups.Remove(dynamicEntitiesGroup);
-	}
-
-	private void HandleStaticGroupDeleteRequest(StaticEntitiesGroup staticEntitiesGroup)
-	{
-		staticEntitiesGroups.Remove(staticEntitiesGroup);
-	}
-
-    void Update()
-	{
-		// Pressing RMB or Escape button if the camera swim mode is active deactivates it
-		if ((Input.GetMouseButtonDown(1) || Input.GetKeyDown(KeyCode.Escape)))
+		// Add main menu toggle to existing Update method
+		if (Input.GetKeyDown(KeyCode.Escape))
 		{
-			// If the camera swim mode is active, deactivate it
-			if (cameraRig.GetComponent<CameraRig>().isActive)
+			if (currentModeManager == null || !currentModeManager.OnEscapePressed())
 			{
-				DectivateSwimMode();
-			}
-				
-			// Check if the camera is parented to the dolly cart
-			if (mainCamera.transform.parent == currentLocationScript.dollyCart.transform)
-			{
-				// If it is, deactivate the automatic camera mode
-				DectivateAutomaticCameraMode();
+				ToggleMainMenu();
 			}
 		}
+
+		if (Input.GetKeyDown(KeyCode.F11))
+		{
+			isHudless = !isHudless;
+			if (currentModeManager != null)
+			{
+				currentModeManager.SetHudless(isHudless);
+			}
+		}
+
+		currentModeManager?.OnUpdate();
 	}
 	
 	/// <summary>
@@ -606,212 +398,162 @@ public class MainScene : MonoBehaviour
 	/// <param name="viewCount">Desired number of views (1-4)</param>
 	public void SetViewCountAndUpdateGUIState(int viewCount)
 	{
-		IsReady = false;
-		try
+		simulationModeManager.SetViewCountAndUpdateGUIState(viewCount);
+	}
+
+	/// <summary>
+	/// Toggles the visibility of the main menu and main GUI
+	/// </summary>
+	public void ToggleMainMenu()
+	{
+		isMainMenuVisible = !isMainMenuVisible;
+		
+		if (isMainMenuVisible)
 		{
-			// Dark gray color
-			StyleColor defaultColor = new StyleColor(new Color(0.3f, 0.3f, 0.3f));
-
-			// Selected cyan color
-			StyleColor selectedColor = new StyleColor(new Color(0.0f, 0.8f, 1.0f));
-
-			// Reset the background color of the view count buttons to default
-			gui.Q<Button>("SetViews1").style.backgroundColor = defaultColor;
-			gui.Q<Button>("SetViews2").style.backgroundColor = defaultColor;
-			gui.Q<Button>("SetViews3").style.backgroundColor = defaultColor;
-			gui.Q<Button>("SetViews4").style.backgroundColor = defaultColor;
-
-			// Change the background color of the correct view count button to blue to indicate the current view count
-			if (viewCount == 1)
+			// Instead of hiding the whole mainGUI, we now just hide the specific mode's GUI
+			if (currentModeManager != null)
 			{
-				gui.Q<Button>("SetViews1").style.backgroundColor = selectedColor;
-			}
-			else if (viewCount == 2)
-			{
-				gui.Q<Button>("SetViews2").style.backgroundColor = selectedColor;
-			}
-			else if (viewCount == 3)
-			{
-				gui.Q<Button>("SetViews3").style.backgroundColor = selectedColor;
-			}
-			else if (viewCount == 4)
-			{
-				gui.Q<Button>("SetViews4").style.backgroundColor = selectedColor;
+				currentModeManager.EnterMenu();
 			}
 
-			// If the view count is less than the current view count
-			if (viewCount < views.Count)
+			mainMenuUIDocument.SetActive(true);
+
+			// Register close button callback after activating the document
+			mainMenuRoot = mainMenuUIDocument.GetComponent<UIDocument>().rootVisualElement;
+			
+			var closeButton = mainMenuRoot.Q<Button>("CloseMenuButton");
+			if (closeButton != null)
 			{
-				// Remove views until the view count is equal to the desired view count
-				while (views.Count > viewCount)
+				closeButton.RegisterCallback<ClickEvent>((evt) => CloseMainMenu());
+			}
+			else
+			{
+				Debug.LogError("[MainScene] CloseMenuButton not found in mainMenuRoot");
+			}
+
+			var assetBrowserButton = mainMenuRoot.Q<Button>("AssetBrowserButton");
+			if (assetBrowserButton != null)
+			{
+				assetBrowserButton.RegisterCallback<ClickEvent>((evt) =>
 				{
-					RemoveView();
+					SwitchMode(AppMode.AssetBrowser);
+					CloseMainMenu();
+				});
+			}
+			else
+			{
+				Debug.LogError("[MainScene] AssetBrowserButton not found in mainMenuRoot");
+			}
+
+			var simulationModeButton = mainMenuRoot.Q<Button>("SimulationModeButton");
+			if (simulationModeButton != null)
+			{
+				simulationModeButton.RegisterCallback<ClickEvent>((evt) =>
+				{
+					SwitchMode(AppMode.Simulation);
+					CloseMainMenu();
+				});
+			}
+			else
+			{
+				Debug.LogError("[MainScene] SimulationModeButton not found in mainMenuRoot");
+			}
+
+			// Set button visibility based on current mode
+			if (currentMode == AppMode.Simulation)
+			{
+				if (simulationModeButton != null)
+				{
+					simulationModeButton.style.display = DisplayStyle.None;
+				}
+				if (assetBrowserButton != null)
+				{
+					assetBrowserButton.style.display = DisplayStyle.Flex;
 				}
 			}
-			// If the view count is greater than the current view count
-			else if (viewCount > views.Count)
+			else if (currentMode == AppMode.AssetBrowser)
 			{
-				// Add views until the view count is equal to the desired view count
-				while (views.Count < viewCount)
+				if (simulationModeButton != null)
 				{
-					AddView();
+					simulationModeButton.style.display = DisplayStyle.Flex;
+				}
+				if (assetBrowserButton != null)
+				{
+					assetBrowserButton.style.display = DisplayStyle.None;
 				}
 			}
+
+			var closeAppButton = mainMenuRoot.Q<Button>("CloseAppButton");
+			if (closeAppButton != null)
+			{
+				closeAppButton.RegisterCallback<ClickEvent>((evt) => Application.Quit());
+			}
+			else
+			{
+				Debug.LogError("[MainScene] CloseAppButton not found in mainMenuRoot");
+			}
 		}
-		finally
+		else
 		{
-			IsReady = true;
+			mainMenuUIDocument.SetActive(false);
+
+			// Re-enter the current mode to show its GUI
+			if (currentModeManager != null)
+			{
+				currentModeManager.ExitMenu();
+			}
 		}
 	}
 
-	private void AddView()
+	/// <summary>
+	/// Closes the main menu and returns to the main GUI
+	/// </summary>
+	private void CloseMainMenu()
+	{
+		isMainMenuVisible = false;
+		mainMenuUIDocument.SetActive(false);
+		
+		// Re-enter the current mode to show its GUI
+		if (currentModeManager != null)
+		{
+			currentModeManager.ExitMenu();
+		}
+	}
+
+	public void SwitchMode(AppMode newMode)
+	{
+		if (currentModeManager != null)
+		{
+			currentModeManager.ExitMode();
+		}
+
+		switch (newMode)
+		{
+			case AppMode.Simulation:
+				currentModeManager = simulationModeManager;
+				break;
+			case AppMode.AssetBrowser:
+				currentModeManager = assetBrowserModeManager;
+				break;
+		}
+
+		currentMode = newMode;
+		currentModeManager.EnterMode();
+		currentModeManager.SetHudless(isHudless);
+	}
+
+	public void SwitchLocation(string locationName)
 	{
 		IsReady = false;
 		try
 		{
-			// Debug
-			Debug.Log("[MainScene] AddView");
-
-			// Instantiate a View object and add it to the views list
-			View view = new View();
-			views.Add(view);
-
-			// Get index of viewPrefab in views list
-			int index = views.IndexOf(view);
-			
-			// Inform each group about viewcount change
-			foreach (DynamicEntitiesGroup group in dynamicEntitiesGroups)
-			{
-				group.UpdateViewsCount(views.Count);
-			}
-			
-			foreach (StaticEntitiesGroup group in staticEntitiesGroups)
-			{
-				group.UpdateViewsCount(views.Count);
-			}
-			
-			// If it's not null, inform the location script about the view count change
-			if (currentLocationScript != null)
-			{
-				currentLocationScript.UpdateViewsCount(views.Count);
-			}
-
-			UpdateViewsLabel();
+			UnloadLocation();
+			LoadLocation(locationName);
 		}
 		finally
 		{
 			IsReady = true;
 		}
-	}
-
-	private void RemoveView()
-	{
-		IsReady = false;
-		try
-		{
-			// Debug
-			Debug.Log("[MainScene] RemoveView");
-
-			// If min views reached, return
-			if (views.Count <= 1)
-			{
-				return;
-			}
-
-			// Erase the last view from views list
-			views.RemoveAt(views.Count - 1);
-
-			// Inform each group about viewcount change
-			foreach (DynamicEntitiesGroup group in dynamicEntitiesGroups)
-			{
-				group.UpdateViewsCount(views.Count);
-			}
-			
-			foreach (StaticEntitiesGroup group in staticEntitiesGroups)
-			{
-				group.UpdateViewsCount(views.Count);
-			}
-			
-			// If it's not null, inform the location script about the view count change
-			if (currentLocationScript != null)
-			{
-				currentLocationScript.UpdateViewsCount(views.Count);
-			}
-
-			UpdateViewsLabel();
-		}
-		finally
-		{
-			IsReady = true;
-		}
-	}
-
-	void UpdateViewsLabel()
-	{
-		// Debug
-		Debug.Log("[MainScene] Views: " + views.Count);
-	}
-
-	/// <summary>
-	/// Activates swim mode, allowing free camera movement and hiding the UI.
-	/// </summary>
-	public void ActivateSwimMode()
-	{
-		cameraRig.GetComponent<CameraRig>().Activate();
-
-		// Set the GUI opacity to 0
-		gui.style.opacity = 0;
-	}
-
-	/// <summary>
-	/// Deactivates swim mode, restoring the UI and restricting camera movement.
-	/// </summary>
-	public void DectivateSwimMode()
-	{
-		cameraRig.GetComponent<CameraRig>().Deactivate();
-
-		// Set the GUI opacity to 1
-		gui.style.opacity = 1;
-	}
-	
-	/// <summary>
-	/// Activates automatic camera mode, attaching the camera to a predefined path.
-	/// </summary>
-	public void ActivateAutomaticCameraMode()
-	{
-		// Parent the main camera to the dolly cart
-		mainCamera.transform.parent = currentLocationScript.dollyCart.transform;
-		
-		// Reset the main camera's position and rotation so it's centered on the dolly cart and looking forward
-		mainCamera.transform.localPosition = Vector3.zero;
-		mainCamera.transform.localRotation = Quaternion.identity;
-
-		// Set the GUI opacity to 0
-		gui.style.opacity = 0;
-		
-		// Hide the cursor and lock it
-		UnityEngine.Cursor.visible = false;
-      UnityEngine.Cursor.lockState = CursorLockMode.Locked;
-	}
-	
-	/// <summary>
-	/// Deactivates automatic camera mode, returning the camera to the camera rig.
-	/// </summary>
-	public void DectivateAutomaticCameraMode()
-	{
-		// Return the main camera to the camera rig
-		mainCamera.transform.parent = cameraRig.transform;
-		
-		// Reset the main camera's position and rotation so it's centered on the camera rig and looking forward
-		mainCamera.transform.localPosition = Vector3.zero;
-		mainCamera.transform.localRotation = Quaternion.identity;
-
-		// Set the GUI opacity to 1
-		gui.style.opacity = 1;
-		
-		// Show the cursor and unlock it
-		UnityEngine.Cursor.visible = true;
-		UnityEngine.Cursor.lockState = CursorLockMode.None;
 	}
 }
 }

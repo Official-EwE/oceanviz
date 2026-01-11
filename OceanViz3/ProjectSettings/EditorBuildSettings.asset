@@ -9,9 +9,18 @@ EditorBuildSettings:
     path: Assets/Scenes/Main/Main.unity
     guid: 99c9720ab356a0642a771bea13969a05
   - enabled: 1
-    path: Assets/Scenes/Locations/Testing/Testing.unity
+    path: Assets/Scenes/Locations/TestingLocation/Testing.unity
     guid: 45d56e1d08efa12499b477759826beb3
   - enabled: 1
-    path: Assets/Scenes/Locations/Mediterranean/Mediterranean.unity
+    path: Assets/Scenes/Locations/MediterraneanLocation/Mediterranean.unity
     guid: fe0a4f73d46dfb248b8090c8e16eb736
+  - enabled: 1
+    path: Assets/Scenes/Locations/PelagicLocation/Pelagic.unity
+    guid: c9d5ae9ed65da104ba2782b2091c460a
+  - enabled: 1
+    path: Assets/Scenes/Locations/MessinianSalinityCrisisLocation/MessinianSalinityCrisis.unity
+    guid: 40bae0306ea956140b236bf610028315
+  - enabled: 1
+    path: Assets/Scenes/Locations/NorthSeaLocation/NorthSea.unity
+    guid: 43d1e504ee77f7d47bca7d3045032381
   m_configObjects: {}

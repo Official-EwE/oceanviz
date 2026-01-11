@@ -6,6 +6,8 @@ using Unity.Collections.LowLevel.Unsafe;
 using Unity.Mathematics;
 using Unity.Physics;
 using Unity.Transforms;
+using Unity.Rendering;
+using UnityEngine.Rendering.Universal;
 
 namespace OceanViz3
 {
@@ -19,10 +21,18 @@ namespace OceanViz3
     [UpdateBefore(typeof(TransformSystemGroup))]
     public partial struct BoidSystem : ISystem
     {
+        // Bend tuning constants (shader _CurrentVector.x behavior)
+        private const float BEND_GAIN = 0.5f;                 // Multiplies signed angular velocity to get bend
+        private const float BEND_MAX_ABS = 0.3f;               // Absolute clamp for bend (match shader expectation)
+        private const float BEND_FLIP_TIME_SEC = 0.8f;         // Time to go from -max to +max (seconds)
+        private const float BEND_SLEW_RATE = (2.0f * BEND_MAX_ABS) / BEND_FLIP_TIME_SEC; // Units per second
+        private const float BEND_ANGVEL_DEADZONE = 0.0f;       // rad/s below which bend is zero
+        private const float PREDATOR_SIZE_TO_RADIUS_FACTOR = 1.0f; // Half of largest mesh dimension contributes to radius
+        
         /// <summary>Query to get the SceneData entity</summary>
         private EntityQuery sceneDataQuery;
 
-        /// <summary>Query to get the PhysicsCollider entity</summary> 
+        /// <summary>Query to get the PhysicsCollider entity</summary>
         private EntityQuery terrainColliderQuery;
 
         /// <summary>
@@ -49,32 +59,6 @@ namespace OceanViz3
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
-            SceneData sceneData = sceneDataQuery.GetSingleton<SceneData>();
-
-            // Disable/Enable boids according to distance from camera
-            var entityCommandBuffer = new EntityCommandBuffer(Allocator.Temp);
-            EntityQuery enabledAndDisabledBoidQuery = SystemAPI.QueryBuilder()
-                .WithAll<BoidShared, BoidUnique>()
-                .WithOptions(EntityQueryOptions.IncludeDisabledEntities)
-                .Build();
-            
-            foreach (Entity entity in enabledAndDisabledBoidQuery.ToEntityArray(Allocator.Temp))
-            {
-                float3 boidPosition = state.EntityManager.GetComponentData<LocalToWorld>(entity).Position;
-                float MaxDistance = 70;
-                if (boidPosition.x > sceneData.CameraPosition.x + MaxDistance || boidPosition.x < sceneData.CameraPosition.x - MaxDistance || boidPosition.z > sceneData.CameraPosition.z + MaxDistance || boidPosition.z < sceneData.CameraPosition.z - MaxDistance)
-                {
-                    // Disable
-                    entityCommandBuffer.AddComponent<Disabled>(entity);
-                }
-                else
-                {
-                    // Enable
-                    entityCommandBuffer.RemoveComponent<Disabled>(entity);
-                }    
-            }
-            entityCommandBuffer.Playback(state.EntityManager);
-            
             // Main Queries
             EntityQuery enabledBoidsQuery = SystemAPI.QueryBuilder()
                 .WithAllRW<LocalToWorld>()
@@ -167,6 +151,7 @@ namespace OceanViz3
                 var copyTargetPositions     = CollectionHelper.CreateNativeArray<float3, RewindableAllocator>(targetCount, ref world.UpdateAllocator);
                 
                 var copyPredatorPositions   = CollectionHelper.CreateNativeArray<float3, RewindableAllocator>(predatorCount, ref world.UpdateAllocator);
+                var copyPredatorSizes       = CollectionHelper.CreateNativeArray<float, RewindableAllocator>(predatorCount, ref world.UpdateAllocator);
                 var cellPredatorPositionIndex = CollectionHelper.CreateNativeArray<int, RewindableAllocator>(boidCount, ref world.UpdateAllocator);
                 var cellPredatorDistance     = CollectionHelper.CreateNativeArray<float, RewindableAllocator>(boidCount, ref world.UpdateAllocator);
                 
@@ -227,6 +212,7 @@ namespace OceanViz3
                 {
                     ChunkBaseEntityIndices = predatorChunkBaseEntityIndexArray,
                     PredatorPositions = copyPredatorPositions,
+                    PredatorSizes = copyPredatorSizes,
                 };
                 var initialPredatorJobHandle = initialPredatorJob.ScheduleParallel(predatorQuery, predatorChunkBaseIndexJobHandle);
                 
@@ -296,6 +282,7 @@ namespace OceanViz3
                     CellTargetPositionIndex = cellTargetPositionIndex,
                     
                     PredatorPositions = copyPredatorPositions,
+                    PredatorSizes = copyPredatorSizes,
                     CellPredatorDistance = cellPredatorDistance,
                     CellPredatorPositionIndex = cellPredatorPositionIndex,
                     
@@ -309,13 +296,18 @@ namespace OceanViz3
                     SeabedBound = boidSettings.SeabedBound,
                     Prey = boidSettings.Prey,
                     
-                    MaxVerticalAngle = boidSettings.MaxVerticalAngle
+                    MaxVerticalAngle = boidSettings.MaxVerticalAngle,
+                    MaxTurnRate = boidSettings.MaxTurnRate,
                 };
                 var steerBoidJobHandle = steerBoidJob.ScheduleParallel(enabledBoidsQuery, mergeCellsJobHandle);
                 
                 var updateTargetVectorJob = new UpdateTargetVectorJob
                 {
                     DeltaTime = deltaTime,
+                    BendGain = BEND_GAIN,
+                    DeadzoneRadians = 0.0f,
+                    AngularVelocityDeadzone = BEND_ANGVEL_DEADZONE,
+                    MaxBendAbs = BEND_MAX_ABS,
                 };
                 var updateTargetVectorJobHandle = updateTargetVectorJob.ScheduleParallel(enabledBoidsQuery, steerBoidJobHandle); // Making the steerBoidJobHandle a dependency of wrapBoidJob makes sure the first job is completed to run this job
                 
@@ -334,26 +326,19 @@ namespace OceanViz3
                 var smoothVectorTransitionJob = new SmoothVectorTransitionJob
                 {
                     DeltaTime = deltaTime,
-                    TransitionSpeed = 0.02f
+                    TransitionSpeed = BEND_SLEW_RATE
                 };
                 var vectorJobHandle = smoothVectorTransitionJob.ScheduleParallel(enabledBoidsQuery, speedJobHandle);
                 
-                var disableEnableBoidJob = new DisableEnableBoidJob // Currently does nothing
-                {
-                    CameraPosition = sceneData.CameraPosition,
-                };
-                var disableEnableBoidJobHandle = disableEnableBoidJob.ScheduleParallel(enabledBoidsQuery, vectorJobHandle); // Making the steerBoidJobHandle a dependency of wrapBoidJob makes sure the first job is completed to run this job
-                
-                var finalJobHandle = JobHandle.CombineDependencies(steerBoidJobHandle, disableEnableBoidJobHandle); // This seems to be only to surpress a warning
-                state.Dependency = finalJobHandle;
+                state.Dependency = vectorJobHandle;
                 
                 // We pass the job handle and add the dependency so that we keep the proper ordering between the jobs
                 // as the looping iterates. For our purposes of execution, this ordering isn't necessary; however, without
                 // the add dependency call here, the safety system will throw an error, because we're accessing multiple
                 // pieces of boid data and it would think there could possibly be a race condition.
                 enabledBoidsQuery.AddDependency(state.Dependency);
-
-                finalJobHandle.Complete(); // Wait for the job to complete
+                
+                vectorJobHandle.Complete(); // Wait for the job to complete
                 
                 // Snap boids to the seabed
                 if (boidSettings.SeabedBound)
@@ -525,10 +510,12 @@ namespace OceanViz3
         {
             [ReadOnly] public NativeArray<int> ChunkBaseEntityIndices;
             [NativeDisableParallelForRestriction] public NativeArray<float3> PredatorPositions;
-            void Execute([ChunkIndexInQuery] int chunkIndexInQuery, [EntityIndexInChunk] int entityIndexInChunk, in LocalToWorld localToWorld, in BoidPredator predator)
+            [NativeDisableParallelForRestriction] public NativeArray<float> PredatorSizes;
+            void Execute([ChunkIndexInQuery] int chunkIndexInQuery, [EntityIndexInChunk] int entityIndexInChunk, in LocalToWorld localToWorld, in BoidPredator predator, in BoidShared boidShared)
             {
                 int entityIndexInQuery = ChunkBaseEntityIndices[chunkIndexInQuery] + entityIndexInChunk;
                 PredatorPositions[entityIndexInQuery] = localToWorld.Position;
+                PredatorSizes[entityIndexInQuery] = boidShared.MeshLargestDimension;
             }
         }
         
@@ -616,6 +603,12 @@ namespace OceanViz3
                 {
                     NearestPosition(predatorPositions, position, out predatorPositionIndex, out predatorDistance);
                     cellPredatorPositionIndex[index] = predatorPositionIndex; // Store the index of the nearest predator
+                    cellPredatorDistance[index] = predatorDistance; // Assign the calculated distance to the array
+                }
+                else // If there are no predators, set distance to a large value
+                {
+                    cellPredatorPositionIndex[index] = -1; // Or some other indicator for no predator
+                    cellPredatorDistance[index] = float.MaxValue;
                 }
 
                 cellIndices[index] = index;
@@ -627,8 +620,8 @@ namespace OceanViz3
             public void ExecuteNext(int cellIndex, int index)
             {
                 cellCount[cellIndex]      += 1;
-                cellAlignment[cellIndex]  += cellAlignment[cellIndex];
-                cellSeparation[cellIndex] += cellSeparation[cellIndex];
+                cellAlignment[cellIndex]  += cellAlignment[cellIndex]; // Changing ths to use cellAlignment[index] breaks boid movement
+                cellSeparation[cellIndex] += cellSeparation[cellIndex]; // Changing ths to use cellSeparation[index] breaks boid movement
                 cellIndices[index]        = cellIndex;
             }
         }
@@ -660,6 +653,7 @@ namespace OceanViz3
             [ReadOnly] public NativeArray<int> CellTargetPositionIndex; // Nearest target index per cell index
             
             [ReadOnly] public NativeArray<float3> PredatorPositions;
+            [ReadOnly] public NativeArray<float> PredatorSizes;
             [ReadOnly] public NativeArray<float> CellPredatorDistance; // Distance per cell to nearest predator
             [ReadOnly] public NativeArray<int> CellPredatorPositionIndex; // Nearest predator index per cell index
             
@@ -673,10 +667,11 @@ namespace OceanViz3
             [ReadOnly] public bool Disabled;
             
             [ReadOnly] public float MaxVerticalAngle;
+            [ReadOnly] public float MaxTurnRate;
             
             private const float BoundsForce = 0.01f;
             
-            void Execute([ChunkIndexInQuery] int chunkIndexInQuery, [EntityIndexInChunk] int entityIndexInChunk, ref LocalToWorld localToWorld, in BoidUnique boidUnique)
+            void Execute([ChunkIndexInQuery] int chunkIndexInQuery, [EntityIndexInChunk] int entityIndexInChunk, Entity entity, ref LocalToWorld localToWorld, ref BoidUnique boidUnique)
             {
                 if (Disabled || boidUnique.Disabled)
                 {
@@ -734,52 +729,77 @@ namespace OceanViz3
                     float3 obstacleSteering;
                     float3 avoidObstacleHeading;
                     float nearestObstacleDistanceFromRadius;
-                    bool predatorClose = false;
-                    float predatorSize = 0.0f;
+                    bool preyInPredatorRange = false; // New variable for direct predator range check
+                    bool predatorDataAvailable = false;
+                    float3 avoidPredatorHeading = float3.zero;
+                    float nearestPredatorDistance = 0f;
+                    float nearestPredatorDistanceFromRadius = 0f;
                     
                     // If the boid is prey and there are predators
+                    // Regular obstacle avoidance parameters
+                    float obstacleEffectiveRadius = CurrentBoidSharedVariant.ObstacleAversionDistance + ObstacleDimensions[nearestObstaclePositionIndex].x;
+                    obstacleSteering = currentPosition - nearestObstaclePosition;
+                    avoidObstacleHeading = (nearestObstaclePosition + math.normalizesafe(obstacleSteering) * obstacleEffectiveRadius) - currentPosition;
+                    nearestObstacleDistanceFromRadius = nearestObstacleDistance - obstacleEffectiveRadius;
+
+                    // Predator avoidance parameters (if applicable)
                     if (Prey == true && PredatorPositions.Length > 0)
                     {
-                        var nearestPredatorPositionIndex      = CellPredatorPositionIndex[cellIndex];
-                        var nearestPredatorDistance         = CellPredatorDistance[cellIndex];
-                        var nearestPredatorPosition        = PredatorPositions[nearestPredatorPositionIndex];
-                    
-                        if (nearestPredatorDistance < nearestObstacleDistance)
-                        {
-                            predatorClose = true;
-                            
-                            // If predator closer than obstacle, then the predator is the nearest obstacle
-                            nearestObstaclePosition = nearestPredatorPosition;
-                            nearestObstacleDistance = nearestPredatorDistance;
-                            
-                            // Fixed predator area size
-                            predatorSize = 10.0f;
-                        }
-                    }
+                        var nearestPredatorPositionIndex = CellPredatorPositionIndex[cellIndex];
+                        nearestPredatorDistance = CellPredatorDistance[cellIndex];
+                        var nearestPredatorPosition = PredatorPositions[nearestPredatorPositionIndex];
 
-                    if (predatorClose)
-                    {
-                        // Nearest obstacle position is now the predator position
-                        obstacleSteering                  = currentPosition - nearestObstaclePosition;
-                        avoidObstacleHeading              = (nearestObstaclePosition + math.normalizesafe(obstacleSteering) * (CurrentBoidSharedVariant.ObstacleAversionDistance + predatorSize)) - currentPosition;
-                        nearestObstacleDistanceFromRadius = nearestObstacleDistance - (CurrentBoidSharedVariant.ObstacleAversionDistance + predatorSize);
-                    }
-                    else
-                    {
-                        // Regular obstacle avoidance
-                        obstacleSteering                  = currentPosition - nearestObstaclePosition;
-                        avoidObstacleHeading              = (nearestObstaclePosition + math.normalizesafe(obstacleSteering) * (CurrentBoidSharedVariant.ObstacleAversionDistance + ObstacleDimensions[nearestObstaclePositionIndex].x)) - currentPosition;
-                        nearestObstacleDistanceFromRadius = nearestObstacleDistance - (CurrentBoidSharedVariant.ObstacleAversionDistance + ObstacleDimensions[nearestObstaclePositionIndex].x);
+                        // Check if prey is within predator detection range (independent of obstacles)
+                        float predatorHalf = 0f;
+                        if (PredatorSizes.Length > 0)
+                        {
+                            predatorHalf = PredatorSizes[nearestPredatorPositionIndex] * PREDATOR_SIZE_TO_RADIUS_FACTOR;
+                        }
+                        float predatorDetectionRange = CurrentBoidSharedVariant.ObstacleAversionDistance + 2.0f + predatorHalf;
+                        preyInPredatorRange = nearestPredatorDistance < predatorDetectionRange;
+
+                        // Build predator avoidance heading for soft switching
+                        float predatorEffectiveRadius = CurrentBoidSharedVariant.ObstacleAversionDistance + predatorHalf;
+                        float3 predatorSteering = currentPosition - nearestPredatorPosition;
+                        avoidPredatorHeading = (nearestPredatorPosition + math.normalizesafe(predatorSteering) * predatorEffectiveRadius) - currentPosition;
+                        nearestPredatorDistanceFromRadius = nearestPredatorDistance - predatorEffectiveRadius;
+                        predatorDataAvailable = true;
                     }
                     
                     // the updated heading direction. If not needing to be avoidant (ie obstacle is not within
                     // predefined radius) then go with the usual defined heading that uses the amalgamation of
                     // the weighted alignment, separation, and target direction vectors.
                     var normalHeading = math.normalizesafe(alignmentResult + separationResult + targetHeading);
-                    var targetForward = math.select(normalHeading, avoidObstacleHeading, nearestObstacleDistanceFromRadius < 0);
+                    // Smooth blend between normal and avoidance based on penetration depth into the avoidance radius
+                    float obstacleBlendWidth = math.max(0.001f, obstacleEffectiveRadius * 0.5f);
+                    float tObstacle = math.saturate(-nearestObstacleDistanceFromRadius / obstacleBlendWidth);
+
+                    float tPredator = 0f;
+                    float3 blendedAvoidHeading = avoidObstacleHeading;
+                    if (predatorDataAvailable)
+                    {
+                        int nearestPredatorPositionIndex2 = CellPredatorPositionIndex[cellIndex];
+                        float predatorHalf2 = 0f;
+                        if (PredatorSizes.Length > 0 && nearestPredatorPositionIndex2 >= 0 && nearestPredatorPositionIndex2 < PredatorSizes.Length)
+                        {
+                            predatorHalf2 = PredatorSizes[nearestPredatorPositionIndex2] * PREDATOR_SIZE_TO_RADIUS_FACTOR;
+                        }
+                        float predatorEffectiveRadius = (CurrentBoidSharedVariant.ObstacleAversionDistance + predatorHalf2);
+                        float predatorBlendWidth = math.max(0.001f, predatorEffectiveRadius * 0.5f);
+                        tPredator = math.saturate(-nearestPredatorDistanceFromRadius / predatorBlendWidth);
+
+                        // Softly switch between obstacle and predator avoid headings based on relative distances
+                        float switchBand = math.max(obstacleBlendWidth, predatorBlendWidth);
+                        float switchWeight = 0.5f + (nearestObstacleDistance - nearestPredatorDistance) / (2f * switchBand);
+                        switchWeight = math.saturate(switchWeight);
+                        blendedAvoidHeading = math.normalizesafe(math.lerp(avoidObstacleHeading, avoidPredatorHeading, switchWeight));
+                    }
+
+                    float tAvoid = math.max(tObstacle, tPredator);
+                    var targetForward = math.normalizesafe(math.lerp(normalHeading, blendedAvoidHeading, tAvoid));
 
                     // updates using the newly calculated heading direction
-                    var nextHeading   = math.normalizesafe(forward + DeltaTime * (targetForward - forward));
+                    var nextHeading = math.normalizesafe(forward + DeltaTime * (targetForward - forward) * MaxTurnRate);
                     
                     // Correct the vertical component of the nextHeading
                     float3 horizontalHeading = new float3(nextHeading.x, 0, nextHeading.z);
@@ -800,15 +820,50 @@ namespace OceanViz3
                     bool isOutsideBounds = currentPosition.x < BoundsMin.x || currentPosition.y < BoundsMin.y || currentPosition.z < BoundsMin.z ||
                                            currentPosition.x > BoundsMax.x || currentPosition.y > BoundsMax.y || currentPosition.z > BoundsMax.z;
 
-                    // If outside bounds, steer towards the center
-                    if (isOutsideBounds)
+                    // Fade-in bounds pull based on penetration depth past the bounds
+                    float dx = math.max(0f, math.max(BoundsMin.x - currentPosition.x, currentPosition.x - BoundsMax.x));
+                    float dy = math.max(0f, math.max(BoundsMin.y - currentPosition.y, currentPosition.y - BoundsMax.y));
+                    float dz = math.max(0f, math.max(BoundsMin.z - currentPosition.z, currentPosition.z - BoundsMax.z));
+                    float distanceOutside = math.length(new float3(dx, dy, dz));
+                    float boundsMargin = math.max(0.001f, CurrentBoidSharedVariant.CellRadius * 2.0f);
+                    float tBound = math.saturate(distanceOutside / boundsMargin);
+                    if (tBound > 0f)
                     {
-                        // Calculate a direction vector from the boid's current position back towards the center of the bounds
-                        float3 directionToCenter = math.normalize(new float3((BoundsMax + BoundsMin) / 2) - currentPosition);
+                        float3 directionToCenter = math.normalizesafe(new float3((BoundsMax + BoundsMin) / 2) - currentPosition);
+                        nextHeading = math.normalizesafe(nextHeading + directionToCenter * (BoundsForce * tBound));
+                    }
 
-                        // Add this direction vector to the boid's next heading
-                        nextHeading += directionToCenter * BoundsForce;
-                        nextHeading = math.normalize(nextHeading);
+                    // After all forces are applied (including bounds force)
+                    // Calculate the angle between current forward and the proposed nextHeading
+                    float angle = math.acos(math.clamp(math.dot(math.normalize(forward), math.normalize(nextHeading)), -1f, 1f));
+                    
+                    // Calculate the maximum angle allowed to turn this frame based on MaxTurnRate
+                    float maxAngleThisFrame = MaxTurnRate * DeltaTime;
+                    
+                    // If the angle exceeds the maximum allowed angle, limit it
+                    if (angle > maxAngleThisFrame)
+                    {
+                        // Get the rotation axis
+                        float3 axis = math.normalize(math.cross(forward, nextHeading));
+                        // Create a quaternion for the maximum allowed rotation
+                        quaternion maxRotation = quaternion.AxisAngle(axis, maxAngleThisFrame);
+                        // Apply the maximum allowed rotation to the current forward vector
+                        nextHeading = math.rotate(maxRotation, forward);
+                    }
+
+                    // Manage speed modifiers for prey based on predator proximity
+                    if (Prey)
+                    {
+                        if (preyInPredatorRange)
+                        {
+                            // Set target speed when in predator range
+                            boidUnique.TargetSpeedModifier = 3.0f;
+                            // Note: EscapingPredator component should be enabled via EntityCommandBuffer
+                            // in a separate system or job that can handle structural changes
+                        }
+                        // Note: Speed reset should only happen when transitioning out of escape state
+                        // This should be handled by checking the EscapingPredator component state
+                        // and only resetting speeds when that component is disabled
                     }
 
                     // Apply the individual speed modifier when updating the position
@@ -835,21 +890,76 @@ namespace OceanViz3
                     var nearestTargetPositionIndex = CellTargetPositionIndex[cellIndex];
                     var nearestObstaclePosition = new float3(ObstaclePositions[nearestObstaclePositionIndex].x, 0, ObstaclePositions[nearestObstaclePositionIndex].z);
                     var nearestTargetPosition = TargetPosition;
+
+                    // Added predator detection logic for SeabedBound boids
+                    bool preyInPredatorRange = false;
+                    if (Prey && PredatorPositions.Length > 0)
+                    {
+                        var nearestPredatorPositionDataIndex = CellPredatorPositionIndex[cellIndex]; // Note: This index is into PredatorPositions
+                        var nearestPredatorDist = CellPredatorDistance[cellIndex]; 
+                        // var nearestPredatorPos = PredatorPositions[nearestPredatorPositionDataIndex]; // Position of the nearest predator
+
+                        int nearestPredatorIndex2D = CellPredatorPositionIndex[cellIndex];
+                        float predatorHalf2D = 0f;
+                        if (PredatorSizes.Length > 0 && nearestPredatorIndex2D >= 0 && nearestPredatorIndex2D < PredatorSizes.Length)
+                        {
+                            predatorHalf2D = PredatorSizes[nearestPredatorIndex2D] * PREDATOR_SIZE_TO_RADIUS_FACTOR;
+                        }
+                        float predatorDetectionRange = CurrentBoidSharedVariant.ObstacleAversionDistance + 15.0f + predatorHalf2D; 
+                        preyInPredatorRange = nearestPredatorDist < predatorDetectionRange;
+                    }
                     
                     var alignmentResult = CurrentBoidSharedVariant.AlignmentWeight * math.normalizesafe((alignment / neighborCount) - forward);
                     var separationResult = CurrentBoidSharedVariant.SeparationWeight * math.normalizesafe((currentPosition * neighborCount) - separation);
                     var targetHeading = CurrentBoidSharedVariant.TargetWeight * math.normalizesafe(nearestTargetPosition - currentPosition);
                     var obstacleSteering = currentPosition - nearestObstaclePosition;
                     
-                    var avoidObstacleHeading = (nearestObstaclePosition + math.normalizesafe(obstacleSteering) * (CurrentBoidSharedVariant.ObstacleAversionDistance + ObstacleDimensions[nearestObstaclePositionIndex].x)) - currentPosition;
-                    var nearestObstacleDistanceFromRadius = nearestObstacleDistance - (CurrentBoidSharedVariant.ObstacleAversionDistance + ObstacleDimensions[nearestObstaclePositionIndex].x);
+                    float obstacleEffectiveRadius2D = CurrentBoidSharedVariant.ObstacleAversionDistance + ObstacleDimensions[nearestObstaclePositionIndex].x;
+                    var avoidObstacleHeading = (nearestObstaclePosition + math.normalizesafe(obstacleSteering) * obstacleEffectiveRadius2D) - currentPosition;
+                    var nearestObstacleDistanceFromRadius = nearestObstacleDistance - obstacleEffectiveRadius2D;
                     var normalHeading = math.normalizesafe(alignmentResult + separationResult + targetHeading);
-                    var targetForward = math.select(normalHeading, avoidObstacleHeading, nearestObstacleDistanceFromRadius < 0);
 
-                    var nextHeading = math.normalizesafe(forward + DeltaTime * (targetForward - forward));
+                    float blendWidth2D = math.max(0.001f, obstacleEffectiveRadius2D * 0.5f);
+                    float t2D = math.saturate(-nearestObstacleDistanceFromRadius / blendWidth2D);
+                    var targetForward = math.normalizesafe(math.lerp(normalHeading, avoidObstacleHeading, t2D));
 
+                    var nextHeading = math.normalizesafe(forward + DeltaTime * (targetForward - forward) * MaxTurnRate);
+
+                    // After all forces are applied (including bounds force)
+                    // Calculate the angle between current forward and the proposed nextHeading
+                    float angle = math.acos(math.clamp(math.dot(math.normalize(forward), math.normalize(nextHeading)), -1f, 1f));
+                    
+                    // Calculate the maximum angle allowed to turn this frame based on MaxTurnRate
+                    float maxAngleThisFrame = MaxTurnRate * DeltaTime;
+                    
+                    // If the angle exceeds the maximum allowed angle, limit it
+                    if (angle > maxAngleThisFrame)
+                    {
+                        // Get the rotation axis
+                        float3 axis = math.normalize(math.cross(forward, nextHeading));
+                        // Create a quaternion for the maximum allowed rotation
+                        quaternion maxRotation = quaternion.AxisAngle(axis, maxAngleThisFrame);
+                        // Apply the maximum allowed rotation to the current forward vector
+                        nextHeading = math.rotate(maxRotation, forward);
+                    }
+
+                    // Manage speed modifiers for prey based on predator proximity
+                    if (Prey)
+                    {
+                        if (preyInPredatorRange)
+                        {
+                            boidUnique.TargetSpeedModifier = 3.0f;
+                            // Note: EscapingPredator component should be enabled via EntityCommandBuffer
+                            // in a separate system or job that can handle structural changes
+                        }
+                    }
+
+                    // Apply the individual speed modifier when updating the position
+                    float individualMoveDistance = MoveDistance * boidUnique.MoveSpeedModifier;
+
+                    // Update the boid's position and rotation
                     localToWorld.Value = float4x4.TRS(
-                        new float3(localToWorld.Position.x + (nextHeading.x * MoveDistance), 0, localToWorld.Position.z + (nextHeading.z * MoveDistance)),
+                        new float3(localToWorld.Position.x + (nextHeading.x * individualMoveDistance), 0, localToWorld.Position.z + (nextHeading.z * individualMoveDistance)),
                         quaternion.LookRotationSafe(nextHeading, math.up()),
                         localToWorld.Value.Scale());
                 }
@@ -858,34 +968,62 @@ namespace OceanViz3
         }
         
         /// <summary>
-        /// Updates the target vector for smooth turning animations.
-        /// Calculates the signed angle between current and previous heading.
+        /// Updates the target vector used by the shader.
+        /// Option A: use angular velocity (turn rate) as bend signal.
         /// </summary>
         [BurstCompile]
         partial struct UpdateTargetVectorJob : IJobEntity
         {
             public float DeltaTime;
+            public float BendGain; // scales the x component fed to the shader
+            public float DeadzoneRadians; // legacy angle deadzone (unused for angular velocity)
+            public float AngularVelocityDeadzone; // rad/s deadzone
+            public float MaxBendAbs; // clamp target bend magnitude
 
             void Execute(ref BoidUnique boidUnique, in LocalToWorld localToWorld)
             {
-                // Normalize the forward vectors
-                float3 currentForward = math.normalize(localToWorld.Forward);
-                float3 previousForward = math.normalize(boidUnique.PreviousHeading);
+                // Normalize forward vectors
+                float3 currentForward = math.normalizesafe(localToWorld.Forward);
+                float3 previousForward = math.normalizesafe(boidUnique.PreviousHeading);
 
-                // Define the up vector (assuming Y is up)
+                // Horizontal plane (Y up)
                 float3 up = new float3(0, 1, 0);
-
-                // Project the forward vectors onto the horizontal plane
                 float3 currentForwardHorizontal = math.normalizesafe(new float3(currentForward.x, 0, currentForward.z));
                 float3 previousForwardHorizontal = math.normalizesafe(new float3(previousForward.x, 0, previousForward.z));
 
-                // Calculate the signed angle between the projected vectors
-                float angle = SignedAngleBetween(previousForwardHorizontal, currentForwardHorizontal, up);
+                // Angular displacement this frame (radians)
+                float deltaAngle = SignedAngleBetween(previousForwardHorizontal, currentForwardHorizontal, up);
+                // Convert to angular velocity (radians/sec)
+                float angularVelocity = 0f;
+                if (DeltaTime > 0f)
+                {
+                    angularVelocity = deltaAngle / DeltaTime;
+                }
 
-                // Set TargetVector.x to the angle (you can scale it if needed)
-                boidUnique.TargetVector = new float3(angle, 0, 0);
+                // Optional micro deadzone on angular velocity
+                if (AngularVelocityDeadzone > 0f)
+                {
+                    float absW = math.abs(angularVelocity);
+                    if (absW <= AngularVelocityDeadzone)
+                    {
+                        angularVelocity = 0f;
+                    }
+                    else
+                    {
+                        float sign = math.sign(angularVelocity);
+                        angularVelocity = sign * (absW - AngularVelocityDeadzone);
+                    }
+                }
 
-                // Update PreviousHeading for the next frame
+                // Apply gain to produce shader bend
+                float bend = angularVelocity * BendGain;
+                // Clamp to avoid targets beyond shader-visible range
+                bend = math.clamp(bend, -MaxBendAbs, MaxBendAbs);
+
+                // Write only x component for shader bending
+                boidUnique.TargetVector = new float3(bend, 0, 0);
+
+                // Persist for next frame
                 boidUnique.PreviousHeading = currentForward;
             }
 
@@ -931,15 +1069,10 @@ namespace OceanViz3
 
             void Execute(ref BoidUnique boidUnique, in BoidShared boidShared)
             {
-                float speedDiff = boidUnique.TargetSpeedModifier - boidUnique.MoveSpeedModifier;
-                if (math.abs(speedDiff) > 0.001f)
-                {
-                    boidUnique.MoveSpeedModifier += (speedDiff / boidUnique.MoveSpeedModifier) * boidShared.StateTransitionSpeed * DeltaTime;
-                }
-                else
-                {
-                    boidUnique.MoveSpeedModifier = boidUnique.TargetSpeedModifier;
-                }
+                // Exponential smoothing that behaves well near zero speeds
+                float k = math.max(0.0001f, boidShared.StateTransitionSpeed);
+                float alpha = 1f - math.exp(-k * DeltaTime);
+                boidUnique.MoveSpeedModifier = math.lerp(boidUnique.MoveSpeedModifier, boidUnique.TargetSpeedModifier, alpha);
             }
         }
         
@@ -950,58 +1083,76 @@ namespace OceanViz3
         public partial struct SmoothVectorTransitionJob : IJobEntity
         {
             public float DeltaTime;
-            public float TransitionSpeed; // Units per second
+            public float TransitionSpeed; // Slew rate (units per second)
 
             void Execute(ref CurrentVectorOverride currentVector, in BoidUnique boidUnique, in BoidShared boidShared)
             {
-                // Calculate the vector difference. This works correctly for both positive and negative components.
-                float3 vectorDiff = boidUnique.TargetVector - currentVector.Value;
-            
-                // Calculate the Euclidean distance. This is always positive, even if vector components are negative.
-                float distance = math.length(vectorDiff);
-            
-                if (distance > 0.001f) // Using a small epsilon to avoid unnecessary updates
+                // Constant slew rate to avoid sudden sign flips; symmetric for +/-
+                // Always slew toward a clamped target so we don't chase unreachable values
+                float xTarget = math.clamp(boidUnique.TargetVector.x, -BEND_MAX_ABS, BEND_MAX_ABS);
+                float3 target = new float3(xTarget, 0f, 0f);
+                float3 diff = target - currentVector.Value;
+                float maxStep = TransitionSpeed * DeltaTime; // amount we can move this frame
+                float dist = math.length(diff);
+                if (dist <= maxStep)
                 {
-                    // Normalize the direction. This gives a unit vector pointing from current to target,
-                    // correctly handling cases where the target has negative components.
-                    float3 direction = vectorDiff / distance;
-                
-                    // Calculate the maximum distance we can move this frame
-                    float maxMove = TransitionSpeed * DeltaTime;
-                
-                    if (distance <= maxMove)
-                    {
-                        // If we're close enough, just set it to the target.
-                        // This ensures we don't overshoot for small remaining distances.
-                        currentVector.Value = boidUnique.TargetVector;
-                    }
-                    else
-                    {
-                        // Move in the direction of the target at constant speed.
-                        // This will correctly move towards negative values if that's where the target is.
-                        currentVector.Value += direction * maxMove;
-                    }
+                    currentVector.Value = target;
                 }
-                // If we're very close (distance <= 0.001), no update is needed to avoid jitter
+                else
+                {
+                    float3 dir = diff / dist;
+                    currentVector.Value += dir * maxStep;
+                }
             }
         }
-        
-        /// <summary>
-        /// Handles enabling/disabling boids based on distance from camera.
-        /// Disabled boids are excluded from simulation and rendering.
-        /// </summary>
+    }
+
+    [UpdateInGroup(typeof(PresentationSystemGroup))]
+    public partial struct BoidLODSystem : ISystem
+    {
+        private EntityQuery sceneDataQuery;
+
         [BurstCompile]
-        partial struct DisableEnableBoidJob : IJobEntity // Diasable boids that are far from camera
+        private partial struct LODJob : IJobEntity
         {
             [ReadOnly] public float3 CameraPosition;
-            public bool Disabled;
-
-            private readonly static float MaxDistance = 65;
-            void Execute(Entity entity, ref LocalToWorld localToWorld, ref BoidUnique boidUnique) // ref means read-write, in means read-only
             
+            void Execute(in BoidShared boidShared, in LocalToWorld localToWorld, ref MaterialMeshInfo materialMeshInfo)
             {
-                // Currently done using a CommandBuffer in Update instead
+                if (boidShared.NumberOfLODs <= 0)
+                    return;
+
+                float distanceToCamera = math.length(localToWorld.Position - CameraPosition);
+                
+                int lodLevel = 0;
+                if (boidShared.NumberOfLODs > 2 && distanceToCamera > 60.0f)
+                    lodLevel = 2;
+                else if (boidShared.NumberOfLODs > 1 && distanceToCamera > 30.0f)
+                    lodLevel = 1;
+
+                lodLevel = math.clamp(lodLevel, 0, boidShared.NumberOfLODs - 1);
+                
+                materialMeshInfo = MaterialMeshInfo.FromRenderMeshArrayIndices(0, lodLevel);
             }
+        }
+
+        public void OnCreate(ref SystemState state)
+        {
+            sceneDataQuery = state.EntityManager.CreateEntityQuery(typeof(SceneData));
+            state.RequireForUpdate(sceneDataQuery);
+        }
+
+        [BurstCompile]
+        public void OnUpdate(ref SystemState state)
+        {
+            var sceneData = sceneDataQuery.GetSingleton<SceneData>();
+            
+            var job = new LODJob
+            {
+                CameraPosition = sceneData.CameraPosition
+            };
+            
+            job.ScheduleParallel();
         }
     }
 }

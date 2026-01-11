@@ -18,8 +18,7 @@ using Cinemachine;
 public struct LocationPreset
 {
     public string name;
-    public Color turbidity_low_color;
-    public Color turbidity_high_color;
+    public int wind_turbine_pylon_amount;
 }
 
 /// <summary>
@@ -45,20 +44,26 @@ public class LocationScript : MonoBehaviour
 
     public Terrain terrain;
     [HideInInspector] public LocationPreset locationPreset;
+    private LocationPreset currentLocationPreset;
     public GameObject dollyCart;
     public List<FloraHabitatPreset> habitatPresets = new List<FloraHabitatPreset>();
+    
     private int viewsCount = 1;
-    [HideInInspector] public List<float> turbidityPerView = new List<float> {0.5f, 0.5f, 0.5f, 0.5f};
+    /// <summary>
+    /// Default initial turbidity used when incoming value equals the old default (0.5) or is unavailable
+    /// </summary>
+    private const float DefaultInitialTurbidity = 0.25f;
     /// <summary>
     /// Current Universal Render Pipeline (URP) asset configuration. Used to enable/disable renderer features.
     /// </summary>
     public UniversalRenderPipelineAsset _pipelineAssetCurrent;
     private bool materialsInitialized = false;
     private Coroutine initializationCoroutine;
+    private MainScene mainScene;
     
     // GUI
     public VisualElement turbidityRow;
-    public List<SliderInt> turbidityPercentageSliderInts = new List<SliderInt>();
+    public List<Slider> turbiditySliders = new List<Slider>();
     
     // Post effect materials
     private Material turbidityMaterial;
@@ -71,6 +76,13 @@ public class LocationScript : MonoBehaviour
     /// Original bloom material. Used in editor to reset the material to starting state
     /// </summary>
     private Material originalBloomMaterial;
+    
+    // Turbidity colors applied to the turbidity post effect material on load
+    public Color colorAtTurbidityValueOne = new Color32(0x30, 0x5C, 0x54, 0xFF);     // #305C54 for value +1
+    public Color colorAtTurbidityValueZero = new Color32(0x26, 0x74, 0x7F, 0xFF);    // #26747F for value 0
+    public Color colorAtTurbidityValueMinusOne = new Color32(0x57, 0x48, 0x26, 0xFF); // #574826 for value -1
+    
+    // Removed camera-driven turbidity color logic
     
     /// <summary>
     /// Initializes the location, sets up terrain settings, and prepares post-processing materials.
@@ -133,10 +145,13 @@ public class LocationScript : MonoBehaviour
     /// <summary>
     /// Sets up the location with specified parameters and initializes turbidity controls
     /// </summary>
-    public void Setup(VisualElement turbidityRow, LocationPreset locationPreset)
+    public void Setup(VisualElement turbidityRow, LocationPreset locationPreset, List<float> turbidityPerView, int viewsCount, MainScene mainScene)
     {
         IsReady = false;
         this.locationPreset = locationPreset;
+        this.currentLocationPreset = locationPreset;
+        this.viewsCount = viewsCount;
+        this.mainScene = mainScene;
         
         // GUI
         this.turbidityRow = turbidityRow;
@@ -144,19 +159,33 @@ public class LocationScript : MonoBehaviour
         // Turbidity Sliders
         for (int i = 0; i < 4; i++)
         {
-            SliderInt sliderInt = turbidityRow.Q<SliderInt>("TurbidityPercentageSliderInt" + i);
-            
-            sliderInt.RegisterValueChangedCallback((evt) => OnTurbiditySliderIntValueChanged(evt));
-            turbidityPercentageSliderInts.Add(sliderInt);
-            
-            // If it's not the first slider, hide it
-            if (i != 0)
+            Slider slider = turbidityRow.Q<Slider>("TurbiditySlider" + i);
+            if (slider != null)
             {
-                sliderInt.style.display = DisplayStyle.None;
+                slider.RegisterValueChangedCallback((evt) => mainScene.simulationModeManager.OnTurbiditySliderValueChanged(evt));
+                turbiditySliders.Add(slider);
             }
             
-            // Set initial turbidity value to 0.33 (33%)
-            SetTurbidityForView(i, 0.33f);
+            // If it's not the first slider, hide it
+            if (i >= viewsCount)
+            {
+                if (slider != null) slider.style.display = DisplayStyle.None;
+            }
+            
+            // Set initial turbidity value
+            float initialTurbidity = DefaultInitialTurbidity;
+            if (turbidityPerView != null)
+            {
+                if (i < turbidityPerView.Count)
+                {
+                    initialTurbidity = turbidityPerView[i];
+                }
+            }
+            if (Mathf.Approximately(initialTurbidity, 0.5f))
+            {
+                initialTurbidity = DefaultInitialTurbidity;
+            }
+            SetTurbidityForView(i, initialTurbidity);
         }
         
         // Start the coroutine to check if materials are initialized
@@ -176,11 +205,31 @@ public class LocationScript : MonoBehaviour
             {
                 materialsInitialized = true;
                 Debug.Log("Materials initialized successfully");
+                ApplyTurbidityColorsIfAvailable();
                 UpdateTurbidity();
                 IsReady = true;
                 Debug.Log("LocationScript is now ready");
             }
         }
+    }
+
+    // Removed Update() turbidity color adjustments
+
+    void Update()
+    {
+        if (turbidityMaterial == null)
+        {
+            return;
+        }
+        if (mainScene == null || mainScene.mainCamera == null)
+        {
+            return;
+        }
+
+        float cameraY = mainScene.mainCamera.transform.position.y;
+        float t = Mathf.InverseLerp(-10f, -180f, cameraY);
+        float lightAmount = Mathf.Lerp(1.0f, 0.22f, t);
+        turbidityMaterial.SetFloat("_LightAmount", lightAmount);
     }
 
     private bool InitializeMaterials()
@@ -190,6 +239,33 @@ public class LocationScript : MonoBehaviour
             return true;
         }
         return false;
+    }
+    
+    private static void SetMaterialColorIfExists(Material targetMaterial, string propertyName, Color color)
+    {
+        if (targetMaterial.HasProperty(propertyName))
+        {
+            targetMaterial.SetColor(propertyName, color);
+        }
+    }
+    
+    // Applies the public colors to the turbidity material if the shader defines the properties
+    private void ApplyTurbidityColorsIfAvailable()
+    {
+        if (turbidityMaterial == null)
+        {
+            return;
+        }
+        
+        // Support both underscored and non-underscored property naming
+        SetMaterialColorIfExists(turbidityMaterial, "ColorAtTurbidityValueOne", colorAtTurbidityValueOne);
+        SetMaterialColorIfExists(turbidityMaterial, "_ColorAtTurbidityValueOne", colorAtTurbidityValueOne);
+        
+        SetMaterialColorIfExists(turbidityMaterial, "ColorAtTurbidityValueZero", colorAtTurbidityValueZero);
+        SetMaterialColorIfExists(turbidityMaterial, "_ColorAtTurbidityValueZero", colorAtTurbidityValueZero);
+        
+        SetMaterialColorIfExists(turbidityMaterial, "ColorAtTurbidityValueMinusOne", colorAtTurbidityValueMinusOne);
+        SetMaterialColorIfExists(turbidityMaterial, "_ColorAtTurbidityValueMinusOne", colorAtTurbidityValueMinusOne);
     }
     
     /// <summary>
@@ -250,29 +326,18 @@ public class LocationScript : MonoBehaviour
         {
             if (i < incViewsCount)
             {
-                turbidityPercentageSliderInts[i].style.display = DisplayStyle.Flex;
+                if (i < turbiditySliders.Count) turbiditySliders[i].style.display = DisplayStyle.Flex;
             }
             else
             {
-                turbidityPercentageSliderInts[i].style.display = DisplayStyle.None;
+                if (i < turbiditySliders.Count) turbiditySliders[i].style.display = DisplayStyle.None;
             }
         }
         
         UpdateTurbidity();
     }
     
-    public void OnTurbiditySliderIntValueChanged(ChangeEvent<int> evt)
-    {
-        var slider = evt.target as SliderInt;
-        
-        // Get the index of the slider
-        int viewIndex = int.Parse(slider.name.Substring(slider.name.Length - 1));
-        
-        // Convert the percentage value to a float value between 0 and 1
-        float turbidityStrength = evt.newValue / 100f;
-        
-        SetTurbidityForView(viewIndex, turbidityStrength);
-    }
+
 
     /// <summary>
     /// Sets the turbidity value for a specific view
@@ -281,18 +346,20 @@ public class LocationScript : MonoBehaviour
     /// <param name="turbidityValue">Turbidity value between 0 and 1</param>
     public void SetTurbidityForView(int viewIndex, float turbidityValue)
     {
-        // Clamp value between 0 and 1
-        turbidityValue = Mathf.Clamp01(turbidityValue);
+        // Clamp value between -1 and 1
+        turbidityValue = Mathf.Clamp(turbidityValue, -1f, 1f);
         
-        // Update the turbidity value
-        turbidityPerView[viewIndex] = turbidityValue;
+        // Update the turbidity value in the SimulationModeManager
+        var mainScene = FindObjectOfType<MainScene>();
+        if (mainScene != null && mainScene.simulationModeManager != null)
+        {
+            mainScene.simulationModeManager.turbidityPerView[viewIndex] = turbidityValue;
+        }
         
         // Update the GUI slider if it exists
-        if (viewIndex < turbidityPercentageSliderInts.Count)
+        if (viewIndex < turbiditySliders.Count)
         {
-            // Convert turbidity value (0-1) to percentage (0-100)
-            int percentageValue = Mathf.RoundToInt(turbidityValue * 100);
-            turbidityPercentageSliderInts[viewIndex].SetValueWithoutNotify(percentageValue);
+            turbiditySliders[viewIndex].SetValueWithoutNotify(turbidityValue);
         }
         
         UpdateTurbidity();
@@ -303,9 +370,6 @@ public class LocationScript : MonoBehaviour
     /// </summary>
     public void UpdateTurbidity()
     {
-        Debug.Log("Updating turbidity");
-        Debug.Log("Views count: " + viewsCount);
-        
         if (turbidityMaterial == null)
         {
             Debug.LogError("turbidityMaterial is null");
@@ -318,19 +382,22 @@ public class LocationScript : MonoBehaviour
             return;
         }
         
+        var mainScene = FindObjectOfType<MainScene>();
+        if (mainScene == null || mainScene.simulationModeManager == null)
+        {
+            Debug.LogError("SimulationModeManager not found");
+            return;
+        }
+
         // Set the turbidity and color values for each view
         for (int i = 0; i < viewsCount; i++)
         {
-            turbidityMaterial.SetFloat("_Turbidity" + i, turbidityPerView[i]);
-            Debug.Log("Setting Turbidity" + i + " to: " + turbidityPerView[i]);
-            
-            // Set the bloom weight for each view, according to the turbidity value. At turbidity 0 the weight is 0, at turbidity 1 the weight is 1
-            // The name of the properties are _BloomWeightView0, _BloomWeightView1, _BloomWeightView2 and _BloomWeightView3
-            bloomMaterial.SetFloat("_BloomWeightView" + i, Mathf.Lerp(0f, 1f, turbidityPerView[i]));
+            float turbidityValue = mainScene.simulationModeManager.turbidityPerView[i];
+            turbidityMaterial.SetFloat("_Turbidity" + i, turbidityValue);
 
-            // Set Color for each view based on turbidity value
-            Color lerpedColor = Color.Lerp(locationPreset.turbidity_low_color, locationPreset.turbidity_high_color, turbidityPerView[i]);
-            turbidityMaterial.SetColor("_Color" + i, lerpedColor);
+            // Bloom mapping: t=0 -> 0.25, t=±1 -> 1.0 (lerped by |t|)
+            float bloomWeight = Mathf.Lerp(0.25f, 1.0f, Mathf.Abs(turbidityValue));
+            bloomMaterial.SetFloat("_BloomWeightView" + i, bloomWeight);
         }
 
         // Set the mask for each view

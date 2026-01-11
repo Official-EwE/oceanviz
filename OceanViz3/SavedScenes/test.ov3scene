@@ -1,0 +1,49 @@
+{
+    "version": 1,
+    "locationName": "Mediterranean",
+    "viewsCount": 2,
+    "turbidities": [
+        {
+            "viewIndex": 0,
+            "turbidity": -0.6000000238418579
+        },
+        {
+            "viewIndex": 1,
+            "turbidity": 0.25
+        },
+        {
+            "viewIndex": 2,
+            "turbidity": 0.25
+        },
+        {
+            "viewIndex": 3,
+            "turbidity": 0.25
+        }
+    ],
+    "groups": [
+        {
+            "presetName": "Blue Shark",
+            "groupName": "Blue Shark",
+            "population": 0.20000000298023225,
+            "overrideHabitats": [],
+            "visibilities": [
+                {
+                    "viewIndex": 0,
+                    "visibility": 0.5299999713897705
+                },
+                {
+                    "viewIndex": 1,
+                    "visibility": 1.0
+                },
+                {
+                    "viewIndex": 2,
+                    "visibility": 1.0
+                },
+                {
+                    "viewIndex": 3,
+                    "visibility": 1.0
+                }
+            ]
+        }
+    ]
+}

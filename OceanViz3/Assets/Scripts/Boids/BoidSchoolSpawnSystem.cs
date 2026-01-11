@@ -18,6 +18,7 @@ namespace OceanViz3
     // [BurstCompile] RandomGenerator is not supported in Burst
     public partial struct BoidSchoolSpawnSystem : ISystem
     {
+        private int previousStaticGroupsCount;
         /// <summary>
         /// Main update loop that processes all boid schools and their members.
         /// Handles:
@@ -34,9 +35,24 @@ namespace OceanViz3
             var world = state.World.Unmanaged;
             float deltaTime = SystemAPI.Time.DeltaTime;
 
+            // Reset deterministic sequences when there are no static entity groups
+            var staticGroupsQuery = SystemAPI.QueryBuilder().WithAll<StaticEntitiesGroupComponent>().Build();
+            int staticGroupsCount = staticGroupsQuery.CalculateEntityCount();
+            if (previousStaticGroupsCount > 0 && staticGroupsCount == 0)
+            {
+                foreach (var (schoolRO, schoolEntity) in SystemAPI.Query<RefRO<BoidSchoolComponent>>().WithEntityAccess())
+                {
+                    var school = schoolRO.ValueRO;
+                    school.TargetRepositionIteration = 0;
+                    school.TargetRepositionTimer = 0f; // force immediate reposition after reset
+                    entityCommandBuffer.SetComponent(schoolEntity, school);
+                }
+            }
+            previousStaticGroupsCount = staticGroupsCount;
+
             // Iterate over all BoidSchool entities
             foreach (var (boidSchool, boidSchoolLocalToWorld, boidSchoolEntity) in
-                     SystemAPI.Query<RefRO<BoidSchool>, RefRO<LocalToWorld>>()
+                     SystemAPI.Query<RefRO<BoidSchoolComponent>, RefRO<LocalToWorld>>()
                          .WithEntityAccess())
             {
                 // School + boids destroy requested 
@@ -88,8 +104,8 @@ namespace OceanViz3
                     // Set the name of the target including the BoidSchoolId and DynamicEntityId
                     entityCommandBuffer.SetName(targetEntity, "BoidTarget_" + boidSchool.ValueRO.DynamicEntityId + "_" + boidSchool.ValueRO.BoidSchoolId);
 
-                    // Set the target's LocalToWorld position randomly within the bounds
-                    var pos = GenerateRandomPositionWithinBounds(boidSchool.ValueRO.BoundsCenter, boidSchool.ValueRO.BoundsSize);
+                    // Set the target's LocalToWorld position deterministically within the bounds
+                    var pos = GenerateDeterministicPositionWithinBounds(boidSchool.ValueRO.BoundsCenter, boidSchool.ValueRO.BoundsSize, (uint)boidSchool.ValueRO.DynamicEntityId, (uint)boidSchool.ValueRO.BoidSchoolId, 0u);
                     entityCommandBuffer.SetComponent(targetEntity, new LocalTransform
                     {
                         Position = pos,
@@ -118,7 +134,19 @@ namespace OceanViz3
                                     ref world.UpdateAllocator); 
 
                             // Instantiate the boids
-                            state.EntityManager.Instantiate(boidSchool.ValueRO.Prefab, boidEntities);
+                            state.EntityManager.Instantiate(boidSchool.ValueRO.BoidPrototype, boidEntities);
+                            
+                            // Set up MaterialMeshInfo for each new boid
+                            for (int i = 0; i < boidEntities.Length; i++)
+                            {
+                                // Get the RenderMeshArray from the prototype
+                                var renderMeshArray = state.EntityManager.GetSharedComponentManaged<RenderMeshArray>(boidSchool.ValueRO.BoidPrototype);
+                                entityCommandBuffer.SetSharedComponentManaged(boidEntities[i], renderMeshArray);
+                                
+                                // Initialize with LOD0
+                                var materialMeshInfo = MaterialMeshInfo.FromRenderMeshArrayIndices(0, 0);
+                                entityCommandBuffer.SetComponent(boidEntities[i], materialMeshInfo);
+                            }
                             
                             // If bone animated, add DisableRendering component
                             if (boidSchool.ValueRO.BoneAnimated)
@@ -144,6 +172,9 @@ namespace OceanViz3
                                 for (int i = 0; i < boidEntities.Length; i++)
                                 {
                                     entityCommandBuffer.AddComponent<BoidPrey>(boidEntities[i]);
+                                    // Add EscapingPredator component (disabled by default) for prey boids
+                                    entityCommandBuffer.AddComponent<EscapingPredator>(boidEntities[i]);
+                                    entityCommandBuffer.SetComponentEnabled<EscapingPredator>(boidEntities[i], false);
                                 }
                             }
                             
@@ -160,6 +191,7 @@ namespace OceanViz3
                                     BoundsMin = boidSchool.ValueRO.BoundsCenter - (boidSchool.ValueRO.BoundsSize * 0.5f),
                                     DefaultMoveSpeed = boidSchool.ValueRO.Speed,
                                     MaxVerticalAngle = boidSchool.ValueRO.MaxVerticalAngle,
+                                    MaxTurnRate = boidSchool.ValueRO.MaxTurnRate,
                                     DefaultAnimationSpeed = boidSchool.ValueRO.AnimationSpeed,
                                     Predator = boidSchool.ValueRO.Predator,
                                     Prey = boidSchool.ValueRO.Prey,
@@ -173,9 +205,15 @@ namespace OceanViz3
                                     StateChangeTimerMin = boidSchool.ValueRO.StateChangeTimerMin,
                                     StateChangeTimerMax = boidSchool.ValueRO.StateChangeTimerMax,
                                     BoneAnimated = boidSchool.ValueRO.BoneAnimated,
+                                    NumberOfLODs = boidSchool.ValueRO.NumberOfLODs,
+                                    SpeedModifierMin = boidSchool.ValueRO.SpeedModifierMin,
+                                    SpeedModifierMax = boidSchool.ValueRO.SpeedModifierMax,
+                                    // Mesh dimensions
+                                    MeshSize = boidSchool.ValueRO.MeshSize,
+                                    MeshLargestDimension = boidSchool.ValueRO.MeshLargestDimension,
                                 };
 
-                                entityCommandBuffer.SetSharedComponent(boidEntities[i], boidShared);
+                                entityCommandBuffer.SetSharedComponentManaged(boidEntities[i], boidShared);
                                 
                                 // Unique
                                 BoidUnique boidUnique = new BoidUnique
@@ -279,7 +317,9 @@ namespace OceanViz3
                                 
                                 // Set the AnimationRandomOffsetOverride to a random value between 0.0f and 1.0f
                                 AnimationRandomOffsetOverride animationRandomOffsetOverride = state.EntityManager.GetComponentData<AnimationRandomOffsetOverride>(boidEntities[i]);
-                                animationRandomOffsetOverride.Value = RandomGenerator.GetRandomFloat(-100.0f, 100.0f);
+                                uint animationSeed = math.hash(new uint4((uint)boidSchool.ValueRO.DynamicEntityId, (uint)boidSchool.ValueRO.BoidSchoolId, (uint)i, 0u));
+                                var animationRng = Unity.Mathematics.Random.CreateFromIndex(animationSeed);
+                                animationRandomOffsetOverride.Value = animationRng.NextFloat(-100.0f, 100.0f);
                                 entityCommandBuffer.SetComponent(boidEntities[i], animationRandomOffsetOverride);
                             }
 
@@ -292,7 +332,9 @@ namespace OceanViz3
                                 {
                                     Center = boidSchool.ValueRO.BoundsCenter,
                                     Extents = boidSchool.ValueRO.BoundsSize * 0.5f // Extents is half the size
-                                }
+                                },
+                                DynamicEntityId = boidSchool.ValueRO.DynamicEntityId,
+                                BoidSchoolId = boidSchool.ValueRO.BoidSchoolId
 
                             };
                             state.Dependency = setBoidLocalToWorldJob.Schedule(amountToInstantiate, 64, state.Dependency);
@@ -430,16 +472,22 @@ namespace OceanViz3
                         // Get the current target position
                         float3 currentTargetPosition = state.EntityManager.GetComponentData<LocalToWorld>(targetEntity).Position;
 
-                        // Generate a new random position within the BoidSchool's BoundsSize
-                        float3 newTargetPosition = GenerateRandomPositionWithinBounds(boidSchool.ValueRO.BoundsCenter, boidSchool.ValueRO.BoundsSize);
+                        // Generate a new deterministic position within the BoidSchool's BoundsSize
+                        float3 newTargetPosition = GenerateDeterministicPositionWithinBounds(
+                            boidSchool.ValueRO.BoundsCenter,
+                            boidSchool.ValueRO.BoundsSize,
+                            (uint)boidSchool.ValueRO.DynamicEntityId,
+                            (uint)boidSchool.ValueRO.BoidSchoolId,
+                            (uint)(1 + boidSchool.ValueRO.TargetRepositionIteration));
 
-                        // Set up a random number generator
-                        uint seed = (uint)System.Environment.TickCount + (uint)boidSchool.ValueRO.BoidSchoolId;
-                        Unity.Mathematics.Random random = new Unity.Mathematics.Random(seed);
+                        // Set up a deterministic random number generator (per school)
+                        uint seed = math.hash(new uint3((uint)boidSchool.ValueRO.DynamicEntityId, (uint)boidSchool.ValueRO.BoidSchoolId, (uint)boidSchool.ValueRO.TargetRepositionIteration));
+                        Unity.Mathematics.Random random = Unity.Mathematics.Random.CreateFromIndex(seed);
 
                         // Set the TargetRepositionTimer to a random value
-                        float repositionDuration = GetRandomFloat(ref random, 1.0f, 10.0f);
+                        float repositionDuration = GetRandomFloat(ref random, boidSchool.ValueRO.StateChangeTimerMin, boidSchool.ValueRO.StateChangeTimerMax);
                         boidSchoolCopy.TargetRepositionTimer = repositionDuration;
+                        boidSchoolCopy.TargetRepositionIteration = boidSchool.ValueRO.TargetRepositionIteration + 1;
 
                         // Store the start and end positions for lerping
                         entityCommandBuffer.SetComponent(targetEntity, new BoidTarget
@@ -461,10 +509,33 @@ namespace OceanViz3
                             BoidShared boidShared = state.EntityManager.GetSharedComponentManaged<BoidShared>(boidEntity);
                             if (boidShared.DynamicEntityId == boidSchool.ValueRO.DynamicEntityId && boidShared.BoidSchoolId == boidSchool.ValueRO.BoidSchoolId)
                             {
-                                // Set a random target speed modifier in boid unique
+                                // Check if this boid is currently escaping from a predator
+                                // TODO This currently does not work correctly, IsComponentEnabled<EscapingPredator> is never set to true
+                                // TODO The random target speed change is instantly overriden when escaping predator though
+                                bool isEscapingPredator = false;
+                                if (state.EntityManager.HasComponent<EscapingPredator>(boidEntity))
+                                {
+                                    isEscapingPredator = state.EntityManager.IsComponentEnabled<EscapingPredator>(boidEntity);
+                                }
+
                                 BoidUnique boidUnique = state.EntityManager.GetComponentData<BoidUnique>(boidEntity);
-                                boidUnique.TargetSpeedModifier = RandomGenerator.GetRandomFloat(0.5f, 1.5f);
-                                entityCommandBuffer.SetComponent(boidEntity, boidUnique);
+                                
+                                // Set random speed for this state transition.
+                                // The seed is deterministic but depends on the current TargetRepositionIteration,
+                                // so each boid gets a new random target speed on every state change.
+                                if (!isEscapingPredator)
+                                {
+                                    uint speedSeed = math.hash(new uint4(
+                                        (uint)boidSchool.ValueRO.DynamicEntityId,
+                                        (uint)boidSchool.ValueRO.BoidSchoolId,
+                                        (uint)boidEntity.Index,
+                                        (uint)boidSchoolCopy.TargetRepositionIteration));
+                                    var speedRng = Unity.Mathematics.Random.CreateFromIndex(speedSeed);
+                                    boidUnique.TargetSpeedModifier = speedRng.NextFloat(
+                                        boidSchool.ValueRO.SpeedModifierMin,
+                                        boidSchool.ValueRO.SpeedModifierMax);
+                                    entityCommandBuffer.SetComponent(boidEntity, boidUnique);
+                                }
                             }
                         }
 
@@ -524,6 +595,23 @@ namespace OceanViz3
         {
             return random.NextFloat(min, max);
         }
+        
+        /// <summary>
+        /// Generates a deterministic position within the specified bounds, seeded by identifiers and a salt.
+        /// </summary>
+        private float3 GenerateDeterministicPositionWithinBounds(float3 boundsCenter, float3 boundsSize, uint dynamicEntityId, uint boidSchoolId, uint salt)
+        {
+            float3 boundsMin = boundsCenter - (boundsSize * 0.5f);
+            float3 boundsMax = boundsCenter + (boundsSize * 0.5f);
+            uint seed = math.hash(new uint3(dynamicEntityId, boidSchoolId, salt));
+            var random = Unity.Mathematics.Random.CreateFromIndex(seed);
+            var pos = new float3(
+                random.NextFloat(boundsMin.x, boundsMax.x),
+                random.NextFloat(boundsMin.y, boundsMax.y),
+                random.NextFloat(boundsMin.z, boundsMax.z)
+            );
+            return pos;
+        }
     }
 
     /// <summary>
@@ -537,53 +625,46 @@ namespace OceanViz3
 
         public NativeArray<Entity> Entities;
         public AABB Bounds;
+        public int DynamicEntityId;
+        public int BoidSchoolId;
 
         public void Execute(int i)
         {
             var entity = Entities[i];
             
-            // Generate a random direction
-            var dir = math.normalizesafe(RandomGenerator.GetRandomFloat3(0.0f, 1.0f) - new float3(0.5f, 0.5f, 0.5f));
+            // Deterministic RNG seeded by group/school/index
+            uint seed = math.hash(new uint3((uint)DynamicEntityId, (uint)BoidSchoolId, (uint)i));
+            var random = Unity.Mathematics.Random.CreateFromIndex(seed);
 
-            // Place the boid within a thorn-shaped distribution
-            float steepness = 2.0f; // Controls how sharp the density falloff is (higher = more concentrated in center)
-            float standardDeviation = 0.25f; // Controls overall spread
+            // Generate a deterministic direction only in the XZ plane (Y-axis rotation)
+            float randomAngle = random.NextFloat(0.0f, 2.0f * math.PI);
+            var dir = new float3(math.sin(randomAngle), 0.0f, math.cos(randomAngle));
 
-            // Generate base gaussian distribution
-            float u1 = RandomGenerator.GetRandomFloat(0.0f, 1.0f);
-            float u2 = RandomGenerator.GetRandomFloat(0.0f, 1.0f);
-            float radius = math.sqrt(-2f * math.log(u1));
-            float theta = 2f * math.PI * u2;
-
-            // Apply thorn curve transformation (power function)
-            // This makes the distribution more concentrated near center
-            radius = math.pow(radius, steepness) * standardDeviation;
-            
-            float x = radius * math.cos(theta);
-            float y = radius * math.sin(theta);
-
-            // Generate z with same distribution
-            float u3 = RandomGenerator.GetRandomFloat(0.0f, 1.0f);
-            float u4 = RandomGenerator.GetRandomFloat(0.0f, 1.0f);
-            float radiusZ = math.sqrt(-2f * math.log(u3));
-            radiusZ = math.pow(radiusZ, steepness) * standardDeviation;
-            float z = radiusZ * math.cos(2f * math.PI * u4);
-
-            // Scale to bounds size and offset to bounds center
-            float3 boundsSize = Bounds.Max - Bounds.Min;
+            // Calculate bounds center
             float3 boundsCenter = (Bounds.Max + Bounds.Min) * 0.5f;
             
-            float3 pos = new float3(
-                boundsCenter.x + x * boundsSize.x,
-                boundsCenter.y + y * boundsSize.y,
-                boundsCenter.z + z * boundsSize.z
-            );
+            // Spawn boids in a very tight cluster at the center
+            // Use a small radius relative to the bounds size for tight grouping
+            float maxSpawnRadius = 2.0f; // Fixed small radius for tight clustering
+            
+            // Generate deterministic position within a small sphere around the center
+            float radius = random.NextFloat(0.0f, maxSpawnRadius);
+            float theta = random.NextFloat(0.0f, 2.0f * math.PI);
+            float phi = random.NextFloat(0.0f, math.PI);
+            
+            // Convert spherical coordinates to cartesian
+            float x = radius * math.sin(phi) * math.cos(theta);
+            float y = radius * math.sin(phi) * math.sin(theta);
+            float z = radius * math.cos(phi);
+            
+            // Position relative to bounds center
+            float3 pos = boundsCenter + new float3(x, y, z);
 
-            // Clamp position to bounds
+            // Clamp position to bounds (safety check)
             pos = math.clamp(pos, Bounds.Min, Bounds.Max);
             
-            // Random scale, rounded to 2 decimal places
-            float scale = math.round(RandomGenerator.GetRandomFloat(0.7f, 1.3f) * 100) / 100;
+            // Deterministic scale, rounded to 2 decimal places
+            float scale = math.round(random.NextFloat(0.7f, 1.3f) * 100) / 100;
 
             var localToWorld = new LocalToWorld
             {

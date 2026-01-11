@@ -25,17 +25,14 @@ public class BoneAnimatedEntityManager : MonoBehaviour
     private Dictionary<Entity, GameObject> entityToGameObject = new Dictionary<Entity, GameObject>();
     private Dictionary<int, DynamicEntitiesGroup> dynamicEntityGroups = new Dictionary<int, DynamicEntitiesGroup>();
     private Dictionary<int, GameObject> templateModels = new Dictionary<int, GameObject>();
-    private float accumulatedTime;
     
     private void Start()
     {
         entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
-        accumulatedTime = 0;
     }
 
     private void Update()
     {
-        accumulatedTime += Time.deltaTime;
         UpdateQueryFilter();
         
         var entities = entitiesWithBoneAnimationQuery.ToEntityArray(Allocator.Temp);
@@ -108,13 +105,27 @@ public class BoneAnimatedEntityManager : MonoBehaviour
                                                         localToWorld.Value.Scale().y, 
                                                         localToWorld.Value.Scale().z);
 
+                    // Update animation speed
+                    var legacyAnimation = go.GetComponentInChildren<Animation>();
+                    if (legacyAnimation != null)
+                    {
+                        var boidUnique = entityManager.GetComponentData<BoidUnique>(entity);
+                        foreach (AnimationState state in legacyAnimation)
+                        {
+                            state.speed = boidUnique.MoveSpeedModifier;
+                        }
+                    }
+
                     var renderer = go.GetComponentInChildren<SkinnedMeshRenderer>();
                     if (renderer != null)
                     {
                         var material = renderer.material;
-                        material.SetFloat("_AccumulatedTime", accumulatedTime);
-                        material.SetVector("_ScreenDisplayStart", entityManager.GetComponentData<ScreenDisplayStartOverride>(entity).Value);
-                        material.SetVector("_ScreenDisplayEnd", entityManager.GetComponentData<ScreenDisplayEndOverride>(entity).Value);
+                        material.SetFloat("_AccumulatedTime", 
+                            entityManager.GetComponentData<AccumulatedTimeOverride>(entity).Value);
+                        material.SetVector("_ScreenDisplayStart", 
+                            entityManager.GetComponentData<ScreenDisplayStartOverride>(entity).Value);
+                        material.SetVector("_ScreenDisplayEnd", 
+                            entityManager.GetComponentData<ScreenDisplayEndOverride>(entity).Value);
                     }
                 }
             }
@@ -189,7 +200,8 @@ public class BoneAnimatedEntityManager : MonoBehaviour
         if (renderer != null)
         {
             var material = renderer.material;
-            material.SetFloat("_AnimationSpeed", entityManager.GetComponentData<AnimationSpeedOverride>(entity).Value);
+            material.SetFloat("_AnimationSpeed", 
+                entityManager.GetComponentData<AnimationSpeedOverride>(entity).Value);
             material.SetFloat("_SineWavelength", entityManager.GetComponentData<SineWavelengthOverride>(entity).Value);
             var sineDeform = entityManager.GetComponentData<SineDeformationAmplitudeOverride>(entity).Value;
             material.SetVector("_SineDeformationAmplitude", new Vector4(sineDeform.x, sineDeform.y, sineDeform.z, 0));
@@ -208,15 +220,22 @@ public class BoneAnimatedEntityManager : MonoBehaviour
             material.SetFloat("_MeshZMax", entityManager.GetComponentData<MeshZMaxOverride>(entity).Value);
             material.SetFloat("_PositiveYClip", entityManager.GetComponentData<PositiveYClipOverride>(entity).Value);
             material.SetFloat("_NegativeYClip", entityManager.GetComponentData<NegativeYClipOverride>(entity).Value);
-            material.SetFloat("_AccumulatedTime", accumulatedTime);
-            material.SetVector("_ScreenDisplayStart", entityManager.GetComponentData<ScreenDisplayStartOverride>(entity).Value);
-            material.SetVector("_ScreenDisplayEnd", entityManager.GetComponentData<ScreenDisplayEndOverride>(entity).Value);
+            material.SetFloat("_AccumulatedTime", 
+                entityManager.GetComponentData<AccumulatedTimeOverride>(entity).Value);
+            material.SetVector("_ScreenDisplayStart", 
+                entityManager.GetComponentData<ScreenDisplayStartOverride>(entity).Value);
+            material.SetVector("_ScreenDisplayEnd", 
+                entityManager.GetComponentData<ScreenDisplayEndOverride>(entity).Value);
         }
 
         var legacyAnimation = instance.GetComponentInChildren<Animation>();
         if (legacyAnimation != null)
         {
             legacyAnimation.wrapMode = WrapMode.Loop;
+            foreach (AnimationState state in legacyAnimation)
+            {
+                state.speed = boidUnique.MoveSpeedModifier;
+            }
             legacyAnimation.Play();
         }
         

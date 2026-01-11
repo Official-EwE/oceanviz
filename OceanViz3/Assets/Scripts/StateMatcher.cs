@@ -5,12 +5,13 @@ using UnityEngine;
 using System.IO;
 using OceanViz3;
 using System.Linq;
+using System.Threading.Tasks;
 
 /// <summary>
 /// StateMatcher reads a requested simulation state from a JSON file and synchronizes the current simulation state to match it using SimulationAPI calls.
 /// </summary>
 /// <remarks>
-/// The JSON follows this schema:
+    /// The JSON follows this schema:
 /// <code>
 /// {
 ///     "location": {
@@ -29,11 +30,11 @@ using System.Linq;
 ///             "static_entities": [
 ///                 {
 ///                     "name": "Cystoseira",
-///                     "density": 0.5
+///                     "population": 30000
 ///                 }
 ///             ],
 ///             "environment": {
-///                 "turbidity": 0.5
+    ///                 "turbidity": 0.5 // Range: -1..1
 ///             }
 ///         }
 ///     ]
@@ -45,6 +46,8 @@ public class StateMatcher : MonoBehaviour
 {
     private SimulationAPI simulationAPI;
     private MainScene mainScene;
+    private string pendingState = null;
+    private bool isApplyingState = false;
     
     private void Start()
     {
@@ -125,168 +128,213 @@ public class StateMatcher : MonoBehaviour
     /// <param name="jsonState">JSON string containing the state configuration.</param>
     public void ApplyRequestedState(string jsonState)
     {
-        Debug.Log("[StateMatcher] JSON Content: " + jsonState);
-      
-        // Parse the JSON state
-        SessionState requestedState = JsonUtility.FromJson<SessionState>(jsonState);
+        // Store or overwrite pending state
+        pendingState = jsonState;
         
-        // Get split screen count from views array length
-        int requestedViewCount = requestedState.views?.Length ?? 0;
-        Debug.Log($"[StateMatcher] Applying state - Split Screen: {requestedViewCount}, Location: {requestedState.location.locationId}");
-        
-        // Validate state data
-        if (requestedState == null || requestedState.location == null)
-        {
-            Debug.LogError("[StateMatcher] Failed to parse state JSON");
+        // Try to apply immediately if possible
+        TryApplyPendingState();
+    }
+
+    private async void TryApplyPendingState()
+    {
+        // If already applying a state or no pending state, do nothing
+        if (isApplyingState || pendingState == null)
             return;
+
+        // Wait until we can apply the state
+        while (!CanApplyState())
+        {
+            await Task.Delay(100);
         }
 
-        if (string.IsNullOrEmpty(requestedState.location.locationId))
-        {
-            Debug.LogError("[StateMatcher] Location ID is missing in state");
-            return;
-        }
+        // Mark that we're applying a state
+        isApplyingState = true;
 
-        if (requestedViewCount <= 0)
+        try
         {
-            Debug.LogError("[StateMatcher] Invalid view count in state");
-            return;
-        }
+            string stateToApply = pendingState;
+            pendingState = null; // Clear pending state before applying
 
-        if (simulationAPI == null || mainScene == null)
-        {
-            Debug.LogError("[StateMatcher] Required components are not initialized");
-            return;
-        }
-        
-        // Compare and update location state
-        if (mainScene.currentLocationName != requestedState.location.locationId)
-        {
-            Debug.Log($"[StateMatcher] Location change detected. Removing all static entity groups before switching from {mainScene.currentLocationName} to {requestedState.location.locationId}");
+            Debug.Log("[StateMatcher] Applying state: " + stateToApply);
             
-            // Remove all static entity groups before location switch
-            foreach (var group in mainScene.staticEntitiesGroups.ToList())
+            // Original ApplyRequestedState logic goes here
+            SessionState requestedState = JsonUtility.FromJson<SessionState>(stateToApply);
+            
+            // Rest of your existing ApplyRequestedState implementation...
+            // (Keep all the existing implementation from the current ApplyRequestedState method)
+            
+            int requestedViewCount = requestedState.views?.Length ?? 0;
+            Debug.Log($"[StateMatcher] Applying state - Split Screen: {requestedViewCount}, Location: {requestedState.location.locationId}");
+            
+            // Validate state data
+            if (requestedState == null || requestedState.location == null)
             {
-                Debug.Log($"[StateMatcher] Removing static entity group {group.presetName} before location switch");
-                simulationAPI.RemoveStaticEntityGroup(group.presetName);
+                Debug.LogError("[StateMatcher] Failed to parse state JSON");
+                return;
+            }
+
+            if (string.IsNullOrEmpty(requestedState.location.locationId))
+            {
+                Debug.LogError("[StateMatcher] Location ID is missing in state");
+                return;
+            }
+
+            if (requestedViewCount <= 0)
+            {
+                Debug.LogError("[StateMatcher] Invalid view count in state");
+                return;
+            }
+
+            if (simulationAPI == null || mainScene == null)
+            {
+                Debug.LogError("[StateMatcher] Required components are not initialized");
+                return;
             }
             
-            Debug.Log($"[StateMatcher] Switching location to {requestedState.location.locationId}");
-            simulationAPI.SwitchLocation(requestedState.location.locationId);
-        }
-        
-        // Compare and update split screen state
-        if (mainScene.views.Count != requestedViewCount)
-        {
-            Debug.Log($"[StateMatcher] Updating split screen from {mainScene.views.Count} to {requestedViewCount}");
-            simulationAPI.SetViewCount(requestedViewCount);
-        }
-
-        // Handle views state
-        if (requestedState.views != null)
-        {
-            // Collect all unique entities in the new state
-            HashSet<string> newDynamicEntities = new HashSet<string>();
-            HashSet<string> newStaticEntities = new HashSet<string>();
-            Dictionary<string, int> maxDynamicEntityPopulations = new Dictionary<string, int>();
-
-            foreach (var view in requestedState.views)
+            // Compare and update location state
+            if (mainScene.currentLocationName != requestedState.location.locationId)
             {
-                if (view.dynamic_entities != null)
+                Debug.Log($"[StateMatcher] Location change detected. Removing all static entity groups before switching from {mainScene.currentLocationName} to {requestedState.location.locationId}");
+                
+                // Remove all static entity groups before location switch
+                foreach (var group in mainScene.staticEntitiesGroups.ToList())
                 {
-                    foreach (var entity in view.dynamic_entities)
-                    {
-                        newDynamicEntities.Add(entity.name);
-                        if (!maxDynamicEntityPopulations.ContainsKey(entity.name))
-                        {
-                            maxDynamicEntityPopulations[entity.name] = entity.population;
-                        }
-                        else
-                        {
-                            maxDynamicEntityPopulations[entity.name] = Math.Max(maxDynamicEntityPopulations[entity.name], entity.population);
-                        }
-                    }
-                }
-
-                if (view.static_entities != null)
-                {
-                    foreach (var entity in view.static_entities)
-                    {
-                        newStaticEntities.Add(entity.name);
-                    }
-                }
-            }
-
-            // Remove dynamic entities that aren't in the new state
-            foreach (var group in mainScene.dynamicEntitiesGroups.ToList())
-            {
-                if (!newDynamicEntities.Contains(group.name))
-                {
-                    Debug.Log($"[StateMatcher] Removing dynamic entity group {group.name} as it's not in new state");
-                    simulationAPI.RemoveDynamicEntityGroup(group.name);
-                }
-            }
-
-            // Remove static entities that aren't in the new state
-            foreach (var group in mainScene.staticEntitiesGroups.ToList())
-            {
-                if (!newStaticEntities.Contains(group.presetName))
-                {
-                    Debug.Log($"[StateMatcher] Removing static entity group {group.presetName} as it's not in new state");
-                    simulationAPI.RemoveStaticEntityGroup(group.presetName);
-                }
-            }
-
-            // Update or add dynamic entities from the new state
-            foreach (var entityEntry in maxDynamicEntityPopulations)
-            {
-                string entityName = entityEntry.Key;
-                int maxPopulation = entityEntry.Value;
-
-                var existingGroup = mainScene.dynamicEntitiesGroups.Find(g => g.name == entityName);
-                if (existingGroup == null)
-                {
-                    // Spawn new dynamic entity
-                    Debug.Log($"[StateMatcher] Spawning new dynamic entity {entityName}");
-                    simulationAPI.SpawnDynamicPreset(entityName);
+                    Debug.Log($"[StateMatcher] Removing static entity group {group.name} before location switch");
+                    simulationAPI.RemoveStaticEntitiesGroup(group.name);
                 }
                 
-                Debug.Log($"[StateMatcher] Setting population for dynamic entity {entityName} to {maxPopulation}");
-                simulationAPI.SetDynamicEntityGroupPopulation(entityName, maxPopulation);
+                Debug.Log($"[StateMatcher] Switching location to {requestedState.location.locationId}");
+                simulationAPI.SetLocation(requestedState.location.locationId);
+            }
+            
+            // Compare and update split screen state
+            if (mainScene.views.Count != requestedViewCount)
+            {
+                Debug.Log($"[StateMatcher] Updating split screen from {mainScene.views.Count} to {requestedViewCount}");
+                simulationAPI.SetViewCount(requestedViewCount);
             }
 
-            // Handle static entities with the new method
-            HandleStaticEntities(requestedState.views);
-
-            // Update view-specific settings
-            for (int viewIndex = 0; viewIndex < requestedState.views.Length; viewIndex++)
+            // Handle views state
+            if (requestedState.views != null)
             {
-                var view = requestedState.views[viewIndex];
-                
-                // Update dynamic entity visibility per view
-                if (view.dynamic_entities != null)
+                // Collect all unique entities in the new state
+                HashSet<string> newDynamicEntities = new HashSet<string>();
+                HashSet<string> newStaticEntities = new HashSet<string>();
+                Dictionary<string, int> maxDynamicEntityPopulations = new Dictionary<string, int>();
+
+                foreach (var view in requestedState.views)
                 {
-                    foreach (var entityName in newDynamicEntities)
+                    if (view.dynamic_entities != null)
                     {
-                        var entityInView = view.dynamic_entities.FirstOrDefault(e => e.name == entityName);
-                        int percentage = 0;
-                        
-                        if (entityInView != null)
+                        foreach (var entity in view.dynamic_entities)
                         {
-                            percentage = (int)((float)entityInView.population / maxDynamicEntityPopulations[entityName] * 100);
+                            newDynamicEntities.Add(entity.name);
+                            if (!maxDynamicEntityPopulations.ContainsKey(entity.name))
+                            {
+                                maxDynamicEntityPopulations[entity.name] = entity.population;
+                            }
+                            else
+                            {
+                                maxDynamicEntityPopulations[entity.name] = Math.Max(maxDynamicEntityPopulations[entity.name], entity.population);
+                            }
                         }
-                        
-                        Debug.Log($"[StateMatcher] Setting visibility for dynamic entity {entityName} in view {viewIndex} to {percentage}%");
-                        simulationAPI.SetDynamicEntityViewVisibilityPercentage(entityName, viewIndex, percentage);
+                    }
+
+                    if (view.static_entities != null)
+                    {
+                        foreach (var entity in view.static_entities)
+                        {
+                            newStaticEntities.Add(entity.name);
+                        }
                     }
                 }
 
-                // Handle environment settings
-                if (view.environment != null)
+                // Remove dynamic entities that aren't in the new state
+                foreach (var group in mainScene.dynamicEntitiesGroups.ToList())
                 {
-                    Debug.Log($"[StateMatcher] Setting turbidity for view {viewIndex} to {view.environment.turbidity}");
-                    simulationAPI.SetTurbidityForView(viewIndex, view.environment.turbidity);
+                    if (!newDynamicEntities.Contains(group.name))
+                    {
+                        Debug.Log($"[StateMatcher] Removing dynamic entity group {group.name} as it's not in new state");
+                        simulationAPI.RemoveDynamicEntityGroup(group.name);
+                    }
                 }
+
+                // Remove static entities that aren't in the new state
+                foreach (var group in mainScene.staticEntitiesGroups.ToList())
+                {
+                    if (!newStaticEntities.Contains(group.name))
+                    {
+                        Debug.Log($"[StateMatcher] Removing static entity group {group.name} as it's not in new state");
+                        simulationAPI.RemoveStaticEntitiesGroup(group.name);
+                    }
+                }
+
+                // Update or add dynamic entities from the new state
+                foreach (var entityEntry in maxDynamicEntityPopulations)
+                {
+                    string entityName = entityEntry.Key;
+                    int maxPopulation = entityEntry.Value;
+
+                    var existingGroup = mainScene.dynamicEntitiesGroups.Find(g => g.name == entityName);
+                    if (existingGroup == null)
+                    {
+                        // Spawn new dynamic entity
+                        Debug.Log($"[StateMatcher] Spawning new dynamic entity {entityName}");
+                        simulationAPI.SpawnDynamicPreset(entityName);
+                    }
+                    
+                    Debug.Log($"[StateMatcher] Setting population for dynamic entity {entityName} to {maxPopulation}");
+                    simulationAPI.SetDynamicEntityGroupPopulation(entityName, maxPopulation);
+                }
+
+                // Handle static entities with the new method
+                HandleStaticEntities(requestedState.views);
+
+                // Update view-specific settings
+                for (int viewIndex = 0; viewIndex < requestedState.views.Length; viewIndex++)
+                {
+                    var view = requestedState.views[viewIndex];
+                    
+                    // Update dynamic entity visibility per view
+                    if (view.dynamic_entities != null)
+                    {
+                        foreach (var entityName in newDynamicEntities)
+                        {
+                            var entityInView = view.dynamic_entities.FirstOrDefault(e => e.name == entityName);
+                            int percentage = 0;
+                            
+                            if (entityInView != null)
+                            {
+                                percentage = (int)((float)entityInView.population / maxDynamicEntityPopulations[entityName] * 100);
+                            }
+                            
+                            Debug.Log($"[StateMatcher] Setting visibility for dynamic entity {entityName} in view {viewIndex} to {percentage}%");
+                            simulationAPI.SetDynamicEntityViewVisibility(entityName, viewIndex, percentage);
+                        }
+                    }
+
+            // Handle environment settings
+                    if (view.environment != null)
+                    {
+                float t = Mathf.Clamp(view.environment.turbidity, -1f, 1f);
+                Debug.Log($"[StateMatcher] Setting turbidity for view {viewIndex} to {t}");
+                simulationAPI.SetTurbidityForView(viewIndex, t);
+                    }
+                }
+            }
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"[StateMatcher] Error applying state: {e}");
+        }
+        finally
+        {
+            isApplyingState = false;
+            
+            // If a new state was queued while we were applying this one, try to apply it
+            if (pendingState != null)
+            {
+                TryApplyPendingState();
             }
         }
     }
@@ -297,10 +345,10 @@ public class StateMatcher : MonoBehaviour
     /// <param name="views">Array of view configurations containing static entity settings.</param>
     private void HandleStaticEntities(StateView[] views)
     {
-        // First collect all static entities and their densities per view
-        Dictionary<string, Dictionary<float, HashSet<int>>> entityDensityViewGroups = new Dictionary<string, Dictionary<float, HashSet<int>>>();
+        // First collect all static entities and their populations per view
+        Dictionary<string, Dictionary<int, HashSet<int>>> entityPopulationViewGroups = new Dictionary<string, Dictionary<int, HashSet<int>>>();
 
-        // Group views by density for each entity
+        // Group views by population for each entity
         for (int viewIndex = 0; viewIndex < views.Length; viewIndex++)
         {
             var view = views[viewIndex];
@@ -308,88 +356,87 @@ public class StateMatcher : MonoBehaviour
 
             foreach (var entity in view.static_entities)
             {
-                if (!entityDensityViewGroups.ContainsKey(entity.name))
+                if (!entityPopulationViewGroups.ContainsKey(entity.name))
                 {
-                    entityDensityViewGroups[entity.name] = new Dictionary<float, HashSet<int>>();
+                    entityPopulationViewGroups[entity.name] = new Dictionary<int, HashSet<int>>();
                 }
                 
-                if (!entityDensityViewGroups[entity.name].ContainsKey(entity.density))
+                if (!entityPopulationViewGroups[entity.name].ContainsKey(entity.population))
                 {
-                    entityDensityViewGroups[entity.name][entity.density] = new HashSet<int>();
+                    entityPopulationViewGroups[entity.name][entity.population] = new HashSet<int>();
                 }
-                entityDensityViewGroups[entity.name][entity.density].Add(viewIndex);
+                entityPopulationViewGroups[entity.name][entity.population].Add(viewIndex);
             }
         }
 
         // Calculate all group names that should exist in the new state
         HashSet<string> validGroupNames = new HashSet<string>();
-        foreach (var entityEntry in entityDensityViewGroups)
+        foreach (var entityEntry in entityPopulationViewGroups)
         {
             string entityName = entityEntry.Key;
-            var densityViewGroups = entityEntry.Value;
+            var populationViewGroups = entityEntry.Value;
 
-            foreach (var densityGroup in densityViewGroups)
+            foreach (var populationGroup in populationViewGroups)
             {
-                float density = densityGroup.Key;
-                string formattedDensity = density.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture);
-                string groupName = $"{entityName}_{formattedDensity}";
-                validGroupNames.Add(groupName);
+                int population = populationGroup.Key;
+                string name = $"{entityName}_{population}";
+                validGroupNames.Add(name);
             }
         }
 
         Debug.Log("[StateMatcher] Current static entity groups:");
         foreach (var group in mainScene.staticEntitiesGroups)
         {
-            Debug.Log($"[StateMatcher] - {group.groupName} (preset: {group.presetName}, density: {group.densityFactor:0.00})");
+            var groupComponent = mainScene.simulationModeManager.GetStaticEntitiesGroupComponent(group.name);
+            Debug.Log($"[StateMatcher] - {group.name}, population: {groupComponent.RequestedCount})");
         }
 
         // First remove all groups that aren't needed in the new state
         foreach (var group in mainScene.staticEntitiesGroups.ToList())
         {
-            bool isValid = validGroupNames.Contains(group.groupName);
-            Debug.Log($"[StateMatcher] Checking group {group.groupName} - Valid: {isValid}");
+            bool isValid = validGroupNames.Contains(group.name);
+            Debug.Log($"[StateMatcher] Checking group {group.name} - Valid: {isValid}");
             if (!isValid)
             {
-                Debug.Log($"[StateMatcher] Removing static entity group {group.groupName} as it's no longer needed");
-                simulationAPI.RemoveStaticEntityGroup(group.groupName);
+                Debug.Log($"[StateMatcher] Removing static entity group {group.name} as it's no longer needed");
+                simulationAPI.RemoveStaticEntitiesGroup(group.name);
             }
         }
 
         // Create or update groups for the new state
-        foreach (var entityEntry in entityDensityViewGroups)
+        foreach (var entityEntry in entityPopulationViewGroups)
         {
             string entityName = entityEntry.Key;
-            var densityViewGroups = entityEntry.Value;
+            var populationViewGroups = entityEntry.Value;
 
-            foreach (var densityGroup in densityViewGroups)
+            foreach (var populationGroup in populationViewGroups)
             {
-                float density = densityGroup.Key;
-                HashSet<int> viewIndices = densityGroup.Value;
-                string formattedDensity = density.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture);
-                string groupName = $"{entityName}_{formattedDensity}";
+                int population = populationGroup.Key;
+                HashSet<int> viewIndices = populationGroup.Value;
+                string name = $"{entityName}_{population}";
 
-                Debug.Log($"[StateMatcher] Processing group {groupName} for views: {string.Join(", ", viewIndices)}");
+                Debug.Log($"[StateMatcher] Processing group {name} for views: {string.Join(", ", viewIndices)}");
 
                 // Try to find existing group with exact name match
                 var existingGroup = mainScene.staticEntitiesGroups
-                    .FirstOrDefault(g => string.Equals(g.groupName, groupName, StringComparison.OrdinalIgnoreCase));
+                    .FirstOrDefault(g => string.Equals(g.name, name, StringComparison.OrdinalIgnoreCase));
 
                 if (existingGroup != null)
                 {
-                    Debug.Log($"[StateMatcher] Updating existing static entity group {groupName}");
-                    simulationAPI.SetStaticEntityGroupDensity(groupName, density);
+                    Debug.Log($"[StateMatcher] Updating existing static entity group {name}");
+                    simulationAPI.SetStaticEntitiesGroupPopulation(name, population);
                 }
                 else
                 {
-                    Debug.Log($"[StateMatcher] Creating new static entity group {groupName}");
-                    simulationAPI.SpawnStaticPreset(entityName, groupName);
-                    simulationAPI.SetStaticEntityGroupDensity(groupName, density);
+                    Debug.Log($"[StateMatcher] Creating new static entity group {name}");
+                    simulationAPI.SpawnStaticPreset(entityName, name);
+                    simulationAPI.SetStaticEntitiesGroupPopulation(name, population);
                 }
 
                 // Update visibility for all views
                 for (int i = 0; i < views.Length; i++)
                 {
-                    simulationAPI.SetStaticEntityGroupViewVisibility(groupName, i, viewIndices.Contains(i));
+                    simulationAPI.SetStaticEntitiesGroupViewVisibility(name, i, viewIndices.Contains(i));
                 }
             }
         }
@@ -457,7 +504,7 @@ public class StateMatcher : MonoBehaviour
         public string name;
         
         [SerializeField]
-        public float density;
+        public int population;
     }
 
     [System.Serializable]
@@ -465,5 +512,22 @@ public class StateMatcher : MonoBehaviour
     {
         [SerializeField]
         public float turbidity;
+    }
+
+    private bool CanApplyState()
+    {
+        if (simulationAPI == null || mainScene == null)
+        {
+            Debug.LogWarning("[StateMatcher] Cannot apply state - required components not initialized");
+            return false;
+        }
+
+        if (!MainScene.IsReady || !LocationScript.IsReady || !GroupPresetsManager.Instance.IsReady)
+        {
+            Debug.Log("[StateMatcher] Cannot apply state - simulation not ready");
+            return false;
+        }
+
+        return true;
     }
 }

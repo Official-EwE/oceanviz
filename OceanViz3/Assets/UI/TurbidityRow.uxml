@@ -1,9 +1,13 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
     <ui:VisualElement name="TurbidityRow" style="flex-grow: 1; flex-direction: row; max-height: 80px; justify-content: space-around; padding-top: 3px; padding-right: 3px; padding-bottom: 3px; padding-left: 3px; min-height: 80px;">
         <ui:Label tabindex="-1" text="Turbidity&#10;" parse-escape-sequences="true" display-tooltip-when-elided="true" style="max-width: 100px; flex-direction: column; -unity-text-align: middle-left;" />
-        <ui:SliderInt high-value="100" direction="Vertical" name="TurbidityPercentageSliderInt0" style="flex-direction: column;" />
-        <ui:SliderInt high-value="100" direction="Vertical" name="TurbidityPercentageSliderInt1" style="flex-direction: column;" />
-        <ui:SliderInt high-value="100" direction="Vertical" name="TurbidityPercentageSliderInt2" style="flex-direction: column;" />
-        <ui:SliderInt high-value="100" direction="Vertical" name="TurbidityPercentageSliderInt3" style="flex-direction: column;" />
+        <ui:Slider high-value="1" direction="Vertical" name="TurbiditySlider0" low-value="-1" />
+        <ui:Slider high-value="1" direction="Vertical" name="TurbiditySlider1" low-value="-1" />
+        <ui:Slider high-value="1" direction="Vertical" name="TurbiditySlider2" low-value="-1" />
+        <ui:Slider high-value="1" direction="Vertical" name="TurbiditySlider3" low-value="-1" />
+        <ui:SliderInt high-value="100" direction="Vertical" name="TurbidityPercentageSliderInt0" low-value="-100" style="flex-direction: column; display: none;" />
+        <ui:SliderInt high-value="100" direction="Vertical" name="TurbidityPercentageSliderInt1" style="flex-direction: column; display: none;" />
+        <ui:SliderInt high-value="100" direction="Vertical" name="TurbidityPercentageSliderInt2" style="flex-direction: column; display: none;" />
+        <ui:SliderInt high-value="100" direction="Vertical" name="TurbidityPercentageSliderInt3" style="flex-direction: column; display: none;" />
     </ui:VisualElement>
 </ui:UXML>

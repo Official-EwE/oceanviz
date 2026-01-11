@@ -2,21 +2,29 @@
 using UnityEditor;
 using UnityEditor.SceneManagement;
 
-[InitializeOnLoadAttribute]
+/// <summary>
+/// Ensures that the main scene at Assets/Scenes/Main/Main.unity
+/// is always used as the Play Mode start scene after the editor reloads.
+/// </summary>
+[InitializeOnLoad]
 public static class DefaultSceneLoader
 {
-    // static DefaultSceneLoader(){
-    //     EditorApplication.playModeStateChanged += LoadDefaultScene;
-    // }
+    private const string MainScenePath = "Assets/Scenes/Main/Main.unity";
 
-    // static void LoadDefaultScene(PlayModeStateChange state){
-    //     if (state == PlayModeStateChange.ExitingEditMode) {
-    //         EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo ();
-    //     }
+    static DefaultSceneLoader()
+    {
+        SceneAsset sceneAsset = AssetDatabase.LoadAssetAtPath<SceneAsset>(MainScenePath);
 
-    //     if (state == PlayModeStateChange.EnteredPlayMode) {
-    //         EditorSceneManager.LoadScene (0);
-    //     }
-    // }
+        UnityEngine.Debug.Assert(
+            sceneAsset != null,
+            "DefaultSceneLoader: Could not find main scene at path: " + MainScenePath);
+
+        if (sceneAsset == null)
+        {
+            return;
+        }
+
+        EditorSceneManager.playModeStartScene = sceneAsset;
+    }
 }
 #endif

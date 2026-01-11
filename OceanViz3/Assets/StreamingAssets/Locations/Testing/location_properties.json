@@ -1,5 +1,4 @@
 ﻿{
   "name": "Testing",
-  "turbidity_low_color" : "#26747F",
-  "turbidity_high_color" : "#305C54"  
+  "wind_turbine_pylon_amount": 3
 }

@@ -71,12 +71,14 @@ Material:
     - _CoreWeight: 0.6
     - _Cutoff: 0.09
     - _DENSITYMODE: 1
+    - _Darkening: 0
     - _Depth: 0.03
     - _Dither: -0.1
     - _DitherBloomOn: 1
     - _FallofCurve: 0.5
     - _FarRange: 33.18
     - _HeadAnimationCutoff: 2
+    - _LightAmount: 1
     - _MODE: 0
     - _MainWeight: 0.28
     - _Metalness: 0
@@ -84,10 +86,10 @@ Material:
     - _QueueControl: 0
     - _QueueOffset: 0
     - _Strenght: 0.1
-    - _Turbidity0: 0.33
-    - _Turbidity1: 0.33
-    - _Turbidity2: 0.33
-    - _Turbidity3: 0.33
+    - _Turbidity0: 0
+    - _Turbidity1: 0
+    - _Turbidity2: 0
+    - _Turbidity3: 0
     - _ViewsAmount: 1
     m_Colors:
     - _Color: {r: 0.14901957, g: 0.454902, b: 0.49803925, a: 1}
@@ -95,6 +97,10 @@ Material:
     - _Color1: {r: 0.49803922, g: 0.15237068, b: 0.14901963, a: 1}
     - _Color2: {r: 0.14901957, g: 0.454902, b: 0.49803913, a: 1}
     - _Color3: {r: 0.14901957, g: 0.454902, b: 0.49803913, a: 1}
+    - _ColorAtTurbidityValueMinusOne: {r: 0.34117648, g: 0.28235298, b: 0.14901957,
+        a: 0}
+    - _ColorAtTurbidityValueOne: {r: 0.18823525, g: 0.36078426, b: 0.32941175, a: 0}
+    - _ColorAtTurbidityValueZero: {r: 0.14901957, g: 0.454902, b: 0.49803913, a: 0}
     - _ColorSeabed: {r: 0.09019608, g: 0.39607847, b: 0.5137255, a: 1}
     - _ColorSurface: {r: 0.17755428, g: 0.5945377, b: 0.6603774, a: 1}
     - _MainParams: {r: 5.23, g: 0.1, b: 0, a: 0}

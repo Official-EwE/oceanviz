@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c509dbaa7b6f416409e3195321a2187e, type: 3}
+  m_Name: MessinianSalinityCrisisTexturesLayerPalette
+  m_EditorClassIdentifier: 
+  PaletteLayers:
+  - {fileID: 8574412962073106934, guid: c4134b77dea0a5d428d5603df0d44110, type: 2}
+  - {fileID: 8574412962073106934, guid: 3a7442e5bef079346906ccc0feb9460d, type: 2}
+  - {fileID: 8574412962073106934, guid: a0f9451ad9c83b34da1914a14c3335cd, type: 2}
+  - {fileID: 8574412962073106934, guid: 27c53139c3c24bd4eab8f0795bb7c353, type: 2}

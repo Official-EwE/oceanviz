@@ -4347,8 +4347,8 @@
     "m_ObjectId": "44840864729143788fc111d0528f33a9",
     "m_Title": "World Position Instead of UV's",
     "m_Position": {
-        "x": -5210.0,
-        "y": -533.0
+        "x": -5502.99951171875,
+        "y": -1721.0
     }
 }
 
@@ -6544,10 +6544,10 @@
         "m_Expanded": true,
         "m_Position": {
             "serializedVersion": "2",
-            "x": -5185.0,
-            "y": -474.0,
+            "x": -5477.99951171875,
+            "y": -1661.999755859375,
             "width": 208.0,
-            "height": 315.0
+            "height": 314.999755859375
         }
     },
     "m_Slots": [
@@ -10586,8 +10586,8 @@
         "m_Expanded": true,
         "m_Position": {
             "serializedVersion": "2",
-            "x": -4944.0,
-            "y": -474.0,
+            "x": -5236.99951171875,
+            "y": -1661.999755859375,
             "width": 208.0,
             "height": 306.0
         }
