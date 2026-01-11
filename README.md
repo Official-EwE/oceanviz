@@ -57,8 +57,11 @@ There are 2 primary ways to control Oceanviz:
 
 ### Developer Documentions
 - [Assets](docs/assets.md)
+- [Locations](docs/locations.md)
+- [Development](docs/development.md)
+- [Techniques](docs/techniques.md)
 
-Detailed documentation for developers can be found in the /docs directory.
+More detailed documentation for developers can be found in the /docs directory.
 
 
 # Credits:
