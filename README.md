@@ -55,6 +55,9 @@ There are 2 primary ways to control Oceanviz:
 1. Via the on-screen UI
 2. Via an API by feeding the visualization a JSON data structure.
 
+### Developer Documentions
+- [Assets](docs/assets.md)
+
 Detailed documentation for developers can be found in the /docs directory.
 
 
