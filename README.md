@@ -24,6 +24,11 @@ Asset Library: Over 50 ready-to-use entities including fish, mammals, birds, inv
 ![Screenshot 2024-12-15 113920](https://github.com/user-attachments/assets/b08c19f7-2c7c-4a11-b67d-834147fb6cfe)
 
 
+
+https://github.com/user-attachments/assets/9fc764e6-1c0b-483b-95fc-4d6df226a4e4
+
+
+
 # Development:
 ### Software Requirement
 - [Unity LTS Release 2022.3.20f1](https://unity.com/releases/editor/qa/lts-releases)
